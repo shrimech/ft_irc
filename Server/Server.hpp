@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <string>
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
@@ -12,6 +11,7 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <cerrno>
+#include <cstdlib>
 
 class Server {
 private:
