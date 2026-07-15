@@ -5,7 +5,22 @@
 #include <string>
 #include <vector>
 
+using namespace std;
 
+class message{
+    private:
+        std::string _content;
+        std::string _sender;
+        std::string _recipient;
+        int         _server_fd;
+
+    public:
+        message(const std::string &content, const std::string &sender, const std::string &recipient);
+        const std::string &getContent() const;
+        const std::string &getSender() const;
+        const std::string &getRecipient() const;
+        void sendMessage(const std::string &message);
+};
 
 class Client
 {
@@ -27,7 +42,6 @@ public:
     const std::string &getUsername() const;
     const std::string &getRealname() const;
 
-    void sendMessage(const std::string &message);
     void joinChannel(const std::string &channel);
     void leaveChannel(const std::string &channel);
 };
