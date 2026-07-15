@@ -28,6 +28,8 @@ private:
     std::string _nickname;
     std::string _username;
     std::string _realname;
+    bool        _authenticated;
+    std::vector<int>        _clients_fd;
     std::vector<std::string> _channels;
 
 public:
