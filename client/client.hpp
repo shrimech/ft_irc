@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "./authontification.hpp"
 
 using namespace std;
 
@@ -22,13 +23,9 @@ class message{
         void sendMessage(const std::string &message);
 };
 
-class Client
+class Client : public Authentification 
 {
 private:
-    std::string _nickname;
-    std::string _username;
-    std::string _realname;
-    bool        _authenticated;
     std::vector<int>        _clients_fd;
     std::vector<std::string> _channels;
 
