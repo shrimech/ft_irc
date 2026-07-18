@@ -26,8 +26,7 @@ class message{
 class Client : public Authentification 
 {
 private:
-    std::vector<int>        _clients_fd;
-    std::vector<std::string> _channels;
+    int fd;
 
 public:
     Client();
