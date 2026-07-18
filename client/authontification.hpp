@@ -26,7 +26,12 @@ public:
     void setUsername(const std::string &username);
 
     bool isAuthenticated() const;
-    void setAuthenticated(bool authenticated);
+    void setAuthenticated();
+
+    // ------------- authentication commands ---------------------
+    void NICK(const std::string &nickname);
+    void USER(const std::string &username);
+    void PASS(const std::string &password);
 };
 
 

@@ -35,6 +35,23 @@ bool Authentification::isAuthenticated() const {
     return _authenticated;
 }
 
-void Authentification::setAuthenticated(bool authenticated) {
-    _authenticated = authenticated;
+void Authentification::setAuthenticated() {
+    if (!_nickname.empty() && !_username.empty()) {
+        _authenticated = true;
+    } else {
+        _authenticated = false;
+    }
+}
+// ------------- authentication commands ---------------------
+
+void Authentification::NICK(const std::string &nickname) {
+    setNickname(nickname);
+}
+
+void Authentification::USER(const std::string &username) {
+    setUsername(username);
+}
+
+void Authentification::PASS(const std::string &password) {
+    setPassword(password);
 }

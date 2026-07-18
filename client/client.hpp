@@ -32,16 +32,10 @@ public:
     Client();
     ~Client();
 
-    void setNickname(const std::string &nickname);
-    void setUsername(const std::string &username);
-    void setRealname(const std::string &realname);
+    void setFd(int fd);
+    int getFd() const;
 
-    const std::string &getNickname() const;
-    const std::string &getUsername() const;
-    const std::string &getRealname() const;
-
-    void joinChannel(const std::string &channel);
-    void leaveChannel(const std::string &channel);
+    void sendMessage(const std::string &message);
 };
 
 
