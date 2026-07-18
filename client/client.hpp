@@ -23,7 +23,7 @@ class message{
         void sendMessage(const std::string &message);
 };
 
-class Client : public Authentification 
+class Client : public Authentification
 {
 private:
     int fd;

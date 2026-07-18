@@ -1,8 +1,8 @@
 #ifndef AUTHENTIFICATION_HPP
 #define AUTHENTIFICATION_HPP
 
-#include "./client.hpp"
-
+// #include "./client.hpp"
+#include <string>
 
 class Authentification
 {
