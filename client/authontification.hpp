@@ -6,7 +6,7 @@
 
 class Authentification
 {
-private:
+protected:
     std::string _password;
     std::string _nickname;
     std::string _username;

@@ -22,32 +22,66 @@ void parseCommand(const std::string& cmd_line, Command& command) {
 void executeCommands(Client& client, const Command& command) {
     if (command.command == "NICK" && command.params.size() == 1) {
         client.NICK(command.params[0]);
+        client.setAuthenticated();
+        if (client.isAuthenticated()) 
+            std::cout << "Client is authenticated." << std::endl;
     } else if (command.command == "USER" && command.params.size() == 1) {
         client.USER(command.params[0]);
+        client.setAuthenticated();
+        if (client.isAuthenticated()) 
+            std::cout << "Client is authenticated." << std::endl;
     } else if (command.command == "PASS" && command.params.size() == 1) {
         client.PASS(command.params[0]);
+        client.setAuthenticated();
+        if (client.isAuthenticated()) 
+            std::cout << "Client is authenticated." << std::endl;
+    }
+    else if (command.command == "PRIVMSG") {
+        if (!client.isAuthenticated()) {
+            std::cerr << "You must be authenticated to send messages." << std::endl;
+            return;
+        }
+        PRIVMSG(client, command);
     } else {
         std::cerr << "Unknown command or missing parameters: " << command.command << std::endl;
     }
 }
 
+void PRIVMSG(Client& client, const Command& command) {
+    if (command.params.size() != 2) {
+        std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
+        return;
+    }
+
+    const std::string& recipient = command.params[0];
+    const std::string& message = command.params[1];
+
+    // Construct the message to send
+    std::string fullMessage = "PRIVMSG to " + recipient + " :" + message + "  Sent successfully!\r\n";
+    std::cout << fullMessage << std::endl; // For demonstration, print the message to stdout
+    // Send the message using the client's sendMessage method
+    // client.sendMessage(fullMessage);
+}
+
 
 int main() {
     Client client;
+    Command command;
+    client.setFd(3); // Set the file descriptor to stdout for demonstration
     std::string input;
-
-    while (client.isAuthenticated() == false) {
+    while (true) {
         std::cout << "> ";
         std::getline(std::cin, input);
 
-        Command command;
+        if (input == "exit") {
+            break;
+        }
+
         parseCommand(input, command);
         executeCommands(client, command);
-        client.setAuthenticated();
+        command.params.clear(); // Clear parameters for the next command
+        
     }
-    std::cout << "Client authenticated with nickname: " << client.getNickname() 
-              << ", username: " << client.getUsername() 
-              << ", password: " << client.getPassword() << std::endl;
 
     return 0;
 }
