@@ -7,7 +7,7 @@
 
 void authentificate(Client& client,const std::string& serv_pass, const std::string& commandLine);
 void executeCommands(Client& client, const Command& command);
-void HandleCommand(int fd,const std::string& serv_pass, const std::string& commandLine);
+void HandleCommand(int fd,Client& client, const std::string& serv_pass, const std::string& commandLine);
 void parseCommand(const std::string& cmd_line, Command& command);
 
 

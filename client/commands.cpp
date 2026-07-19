@@ -3,7 +3,7 @@
 void authentificate(Client& client,const std::string& serv_pass, const std::string& commandLine) {
     Command command;
     parseCommand(commandLine, command);
-    std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
+    // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
         client.NICK(client.getFd(), command.params[0]);
     } else if (command.command == "USER" && command.params.size() == 1) {
@@ -13,15 +13,12 @@ void authentificate(Client& client,const std::string& serv_pass, const std::stri
     }
     if (client.isAuthenticated()) {
         std::cout << "Client authenticated successfully!" << std::endl;
-    } else {
-        std::cout << "Client authentication failed." << std::endl;
-    }
+    } 
 }
 
-void HandleCommand(int fd,const std::string& serv_pass, const std::string& commandLine) {
-    Client client;
-    client.setFd(fd);
+void HandleCommand(int fd, Client& client, const std::string& serv_pass, const std::string& commandLine) {
     Command command;
+    client.setFd(fd);
     std::cout << client.Authentification::isAuthenticated() << "  " << commandLine << std::endl;
     if (!client.isAuthenticated()) {
             authentificate(client, serv_pass, commandLine);

@@ -102,17 +102,17 @@ void Server::ReceiveNewData(int fd) {
         //     << _clientBuffers[fd].size() << std::endl;
         
         size_t pos;
-        while ((pos = _clientBuffers[fd].getCmd_line().find("\r\n")) != std::string::npos) {
-            std::cout << "Processing command from client " << fd << "   " << _clientBuffers[fd].getCmd_line() << std::endl;
+        while ((pos = _clientBuffers[fd].getCmd_line().find("\n")) != std::string::npos) {
+            // {DEBUG}: std::cout << "Processing command from client " << fd << "   " << _clientBuffers[fd].getCmd_line() << std::endl;
             std::string command = _clientBuffers[fd].getCmd_line().substr(0, pos);
 
-            _clientBuffers[fd].getCmd_line().erase(0, pos + 2);
+            _clientBuffers[fd].getCmd_line().erase(0, pos + 1);
 
-            std::cout << "Command received from client " << fd << ": " << command << std::endl;
+            // {DEBUG}: std::cout << "Command received from client " << fd << ": " << command << std::endl;
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-            HandleCommand(fd, _password ,command);
+            HandleCommand(fd,_clientBuffers[fd] , _password ,command);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;

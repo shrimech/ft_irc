@@ -36,7 +36,7 @@ bool Authentification::isAuthenticated() const {
 }
 
 void Authentification::setAuthenticated() {
-    if (!_nickname.empty() && !_username.empty()) {
+    if (!_nickname.empty() && !_username.empty() && !_password.empty()) {
         _authenticated = true;
     } else {
         _authenticated = false;
@@ -59,18 +59,22 @@ void Authentification::USER(int fd, const std::string &username) {
 }
 
 void Authentification::PASS(int fd, const std::string &password, const std::string &serv_pass) {
-    std::cout << "User:?????????????????????????????? " << serv_pass << "====================== "<< password << " is trying to authenticate." << std::endl;
+    // std::cout << "{DEBUG}: User:?????????????????????????????? " << serv_pass << "====================== "<< password << " is trying to authenticate." << std::endl;
     if (password == serv_pass) {
         _password = password;
         setAuthenticated();
     } else {
         std::cout << "User: " << fd << " set an Incorrect password or try to brute force the server." << std::endl;
     }
-    if (isAuthenticated()) {
+    if (isAuthenticated() && _password == serv_pass) {
         std::string reply = "Password accepted. You are now authenticated.\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
+    }
+    else if (!isAuthenticated() && _password == serv_pass) {
+        std::string reply = "password Accepted, continue ur authentication process.\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
     } else {
-        std::string reply = "Incorrect password. Authentication failed.\r\n";
+        std::string reply = "Incorrect password. Authentication failed, Enter the correct irc.Brika.net's password.\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
     }
 }
