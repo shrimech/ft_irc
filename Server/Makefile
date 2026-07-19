@@ -1,9 +1,9 @@
-SRC = Server.cpp main.cpp
+SRC = Server.cpp main.cpp ../client/authentification.cpp ../client/commands.cpp ../client/client.cpp
 OBJ = $(SRC:.cpp=.o)
-HDR = Server.hpp
+HDR = Server.hpp ../client/authentification.hpp ../client/commands.hpp ../client/client.hpp
 Name = Server
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
+CXXFLAGS =   -Wall -Wextra -Werror -std=c++98 -g
 
 all: $(Name)
 $(Name): $(OBJ) $(HDR)

@@ -1,15 +1,14 @@
-#ifndef COMMANDS_PARSE_HPP
-#define COMMANDS_PARSE_HPP
+#ifndef COMMANDS_HPP
+#define COMMANDS_HPP
 
-#include "client.hpp"
+#include "includes.hpp"
 
-struct Command {
-    std::string command;
-    std::vector<std::string> params;
-};
 
-void parseCommand(const std::string& cmd_line, Command& command);
+
+void authentificate(Client& client,const std::string& serv_pass, const std::string& commandLine);
 void executeCommands(Client& client, const Command& command);
+void HandleCommand(int fd,const std::string& serv_pass, const std::string& commandLine);
+void parseCommand(const std::string& cmd_line, Command& command);
 
 
 // ---------- commands ------------------------------

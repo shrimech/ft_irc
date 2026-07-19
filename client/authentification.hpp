@@ -1,16 +1,15 @@
 #ifndef AUTHENTIFICATION_HPP
 #define AUTHENTIFICATION_HPP
 
-// #include "./client.hpp"
-#include <string>
+#include "includes.hpp"
 
 class Authentification
 {
 protected:
+    bool        _authenticated;
     std::string _password;
     std::string _nickname;
     std::string _username;
-    bool        _authenticated;
 
 public:
     Authentification();
@@ -29,9 +28,9 @@ public:
     void setAuthenticated();
 
     // ------------- authentication commands ---------------------
-    void NICK(const std::string &nickname);
-    void USER(const std::string &username);
-    void PASS(const std::string &password);
+    void NICK(int fd, const std::string &nickname);
+    void USER(int fd, const std::string &username);
+    void PASS(int fd, const std::string &password, const std::string &serv_pass);
 };
 
 

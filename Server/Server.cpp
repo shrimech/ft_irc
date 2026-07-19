@@ -1,5 +1,5 @@
-#include "Server.hpp"
-
+// #include "../client/client.hpp"
+#include "../client/includes.hpp"
 Server::Server(int port, std::string password) : _port(port), _serverSocket(-1), _serverName("irc.Brika.net"), _password(password) {}
 
 std::string Server::getName() const {
@@ -85,7 +85,7 @@ void Server::AcceptNewClient() {
         // Sending Welcome msg (ghir db smit client guest a si salah)
         std::string client_nickname = "Guest"; 
         
-        std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network\r\n";
+        std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
 
         send(client_fd, reply.c_str(), reply.length(), 0);
     }
@@ -96,20 +96,23 @@ void Server::ReceiveNewData(int fd) {
     ssize_t bytes = recv(fd, &buffer[0], buffer.size() - 1, 0);
 
     if (bytes > 0) {
-        _clientBuffers[fd].append(&buffer[0], bytes);
+        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes);
         // // DEBUG: (for data lost)
         // std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
         //     << _clientBuffers[fd].size() << std::endl;
         
         size_t pos;
-        while ((pos = _clientBuffers[fd].find("\n")) != std::string::npos) {
-            std::string command = _clientBuffers[fd].substr(0, pos);
-            _clientBuffers[fd].erase(0, pos + 1);
+        while ((pos = _clientBuffers[fd].getCmd_line().find("\r\n")) != std::string::npos) {
+            std::cout << "Processing command from client " << fd << "   " << _clientBuffers[fd].getCmd_line() << std::endl;
+            std::string command = _clientBuffers[fd].getCmd_line().substr(0, pos);
+
+            _clientBuffers[fd].getCmd_line().erase(0, pos + 2);
+
+            std::cout << "Command received from client " << fd << ": " << command << std::endl;
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-                
-            std::cout << "Command from " << fd << ": " << command << std::endl;
+            HandleCommand(fd, _password ,command);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;
