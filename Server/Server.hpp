@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cerrno>
 #include <cstdlib>
+#include "../client/client.hpp"
 
 class Server {
 private:
