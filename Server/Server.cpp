@@ -98,8 +98,8 @@ void Server::ReceiveNewData(int fd) {
     if (bytes > 0) {
         _clientBuffers[fd].append(&buffer[0], bytes);
         // DEBUG: (for data lost)
-        std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
-            << _clientBuffers[fd].size() << std::endl;
+        // std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
+        //     << _clientBuffers[fd].size() << std::endl;
         
         size_t pos;
         while ((pos = _clientBuffers[fd].find("\n")) != std::string::npos) {
