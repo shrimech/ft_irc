@@ -1,16 +1,15 @@
 #ifndef AUTHENTIFICATION_HPP
 #define AUTHENTIFICATION_HPP
 
-#include "./client.hpp"
-
-
+#include "includes.hpp"
+class Client; // Forward declaration of Client class
 class Authentification
 {
-private:
+protected:
+    bool        _authenticated;
     std::string _password;
     std::string _nickname;
     std::string _username;
-    bool        _authenticated;
 
 public:
     Authentification();
@@ -26,7 +25,13 @@ public:
     void setUsername(const std::string &username);
 
     bool isAuthenticated() const;
-    void setAuthenticated(bool authenticated);
+    void setAuthenticated();
+
+    // ------------- authentication commands ---------------------
+    void NICK(int fd, const std::string &nickname);
+    void USER(int fd,std::map<int, Client>& clientBuffers, const std::string &username);
+    void PASS(int fd, const std::string &password, const std::string &serv_pass);
+
 };
 
 
