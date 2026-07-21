@@ -83,11 +83,11 @@ void Server::AcceptNewClient() {
         std::cout << "New client connected: " << client_fd << std::endl;
 
         // Sending Welcome msg (ghir db smit client guest a si salah)
-        std::string client_nickname = "Guest"; 
+        // std::string client_nickname = "Guest"; 
         
-        std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
-
-        send(client_fd, reply.c_str(), reply.length(), 0);
+        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
+// 
+        // send(client_fd, reply.c_str(), reply.length(), 0);
     }
 }
 

@@ -9,11 +9,18 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
         client.NICK(client.getFd(), command.params[0]);
     } else if ((command.command == "USER" || command.command == "userhost") /*&& command.params.size() == 1*/) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
-    } else if ((command.command == "PASS") && command.params.size() == 1) {
+    }
+    else if ((command.command == "PASS") && client.getPassword() == serv_pass) {
+        std::string reply = "462 ERR_ALREADYREGISTERED.\r\n";
+        send(client.getFd(), reply.c_str(), reply.length(), 0);
+    }
+     else if ((command.command == "PASS") && command.params.size() == 1) {
         client.PASS(client.getFd(), command.params[0], serv_pass);
     }
     if (client.isAuthenticated()) {
-        std::cout << "Client authenticated successfully!" << std::endl;
+        std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
+        std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
+        send(client.getFd(), reply.c_str(), reply.length(), 0);
     } 
 }
 
@@ -29,12 +36,12 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
             return;
         }
     }
-    // else
-    // {
+    else
+    {
         parseCommand(commandLine, command);
-        std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
+        // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
         executeCommands(client, command);
-    // }
+    }
     
 }
 
@@ -72,7 +79,7 @@ void PRIVMSG(Client& client, const Command& command) {(void)client; // Suppress 
 }
 
 void executeCommands(Client& client, const Command& command) {
-    if (command.command == "PRIVMSG") {
+    if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
         // PRIVMSG(client, command);
@@ -84,7 +91,7 @@ void executeCommands(Client& client, const Command& command) {
 void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers) {
     for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
         if (it->second.getUsername() == username) {
-            throw std::runtime_error("Username already taken: " + username);
+            throw std::runtime_error("462 ERR_ALREADYREGISTERED");
         }
     }
 }
