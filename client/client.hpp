@@ -9,7 +9,6 @@ struct Command {
     std::string command;
     std::vector<std::string> params;
 };
-
 class Client : public Authentification
 {
     protected:

@@ -1,14 +1,15 @@
 #include "includes.hpp"
 
-void authentificate(Client& client,const std::string& serv_pass, const std::string& commandLine) {
+void authentificate(Client& client,std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine) {
     Command command;
     parseCommand(commandLine, command);
+
     // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
         client.NICK(client.getFd(), command.params[0]);
     } else if ((command.command == "USER" || command.command == "userhost") /*&& command.params.size() == 1*/) {
-        client.USER(client.getFd(), command.params[0]);
-    } else if (command.command == "PASS" && command.params.size() == 1) {
+        client.USER(client.getFd(),clientBuffers, command.params[0]);
+    } else if ((command.command == "PASS") && command.params.size() == 1) {
         client.PASS(client.getFd(), command.params[0], serv_pass);
     }
     if (client.isAuthenticated()) {
@@ -16,12 +17,13 @@ void authentificate(Client& client,const std::string& serv_pass, const std::stri
     } 
 }
 
-void HandleCommand(int fd, Client& client, const std::string& serv_pass, const std::string& commandLine) {
+void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine) {
     Command command;
+    Client& client = clientBuffers[fd];
     client.setFd(fd);
     std::cout << client.Authentification::isAuthenticated() << "  " << commandLine << std::endl;
     if (!client.isAuthenticated()) {
-            authentificate(client, serv_pass, commandLine);
+            authentificate(client,clientBuffers, serv_pass, commandLine);
         if (!client.isAuthenticated()) {
             std::cerr << "Client not authenticated. ALL Commands are ignored.for user : "<< fd << " except PASS,NICK,USER" << std::endl;
             return;
@@ -76,6 +78,14 @@ void executeCommands(Client& client, const Command& command) {
         // PRIVMSG(client, command);
     } else {
         std::cerr << "Unknown command: " << command.command << std::endl;
+    }
+}
+
+void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers) {
+    for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+        if (it->second.getUsername() == username) {
+            throw std::runtime_error("Username already taken: " + username);
+        }
     }
 }
 

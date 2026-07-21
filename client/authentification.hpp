@@ -2,7 +2,7 @@
 #define AUTHENTIFICATION_HPP
 
 #include "includes.hpp"
-
+class Client; // Forward declaration of Client class
 class Authentification
 {
 protected:
@@ -29,8 +29,9 @@ public:
 
     // ------------- authentication commands ---------------------
     void NICK(int fd, const std::string &nickname);
-    void USER(int fd, const std::string &username);
+    void USER(int fd,std::map<int, Client>& clientBuffers, const std::string &username);
     void PASS(int fd, const std::string &password, const std::string &serv_pass);
+
 };
 
 

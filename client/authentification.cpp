@@ -51,7 +51,14 @@ void Authentification::NICK(int fd, const std::string &nickname) {
     setAuthenticated();
 }
 
-void Authentification::USER(int fd, const std::string &username) {
+void Authentification::USER(int fd,std::map<int, Client>& clientBuffers, const std::string &username) {
+    try {
+        checkUniqueUsername(username, clientBuffers);
+    } catch (const std::runtime_error& e) {
+        std::string reply = "Error: " + std::string(e.what()) + "\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
     setUsername(username);
     std::string reply = "Username set to: " + username + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);

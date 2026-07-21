@@ -112,7 +112,7 @@ void Server::ReceiveNewData(int fd) {
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-            HandleCommand(fd,_clientBuffers[fd] , _password ,command);
+            HandleCommand(fd, _clientBuffers, _password, command);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;
