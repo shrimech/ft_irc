@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "client/Client.hpp"
-#include "channel/ChannelRegistry.hpp"
+#include "../client/Client.hpp"
+#include "ChannelRegistry.hpp"
 #include <sstream>
 
 struct context

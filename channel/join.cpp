@@ -1,5 +1,4 @@
 #include "ChannelCommands.hpp"
-#include "ChannelRegistry.hpp"
 
 void replyMsg(context& ctx, const std::string& rcode, const std::string& msg)
 {
@@ -13,7 +12,7 @@ void joinHandler(context& ctx)
 	if (ctx.params.empty())
 		return replyMsg(ctx, " 461 ", "JOIN :Not enough parameters");
 	std::string channelName = ctx.params[0];
-	if (channelName.empty() || (channelName[0] != '#' && channelName[0] != '&'))
+	if (channelName.size() < 2 || (channelName[0] != '#' && channelName[0] != '&'))
 		return replyMsg(ctx, " 403 ", channelName + " :No such channel");
 	Channel *channel = ctx.channels.findOrCreate(channelName);
 	int fd = ctx.client.getFD();
@@ -35,5 +34,5 @@ void joinHandler(context& ctx)
 	std::string msg = ctx.client.getPrefix() + " JOIN " + channelName;
 	channel->broadCast(msg);
 	replyMsg(ctx, " 353 ", "= " + channelName + " :" + channel->getMembersName());
-	replyMsg(ctx, " 366 ", channelName + " :End of /Names list");
+	replyMsg(ctx, " 366 ", channelName + " :End of /Names list.");
 }
