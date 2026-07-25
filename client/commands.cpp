@@ -112,7 +112,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
 void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
 	std::vector<std::string> params = command.params;
-    if(command.command == "PASS" || command.command == "USER" || command.command == "NICK")
+    if(command.command == "PASS")
     {
         std::string reply =  "U're already authentified ! \r\n";
         send(client.getFd(),reply.c_str(),reply.length(),0);
