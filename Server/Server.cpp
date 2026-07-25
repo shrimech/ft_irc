@@ -1,4 +1,5 @@
-#include "Server.hpp"
+// #include "../client/client.hpp"
+#include "../client/includes.hpp"
 
 Server::Server(int port, std::string password) : _port(port), _serverSocket(-1), _serverName("irc.Brika.net"), _password(password) {}
 
@@ -45,6 +46,7 @@ void Server::Init() {
 }
 
 void Server::Run() {
+	ChannelRegistry channels; 
     while (true) {
         if (poll(&_pollfds[0], _pollfds.size(), -1) < 0)
             throw std::runtime_error("Poll failed");
@@ -57,7 +59,7 @@ void Server::Run() {
                 if (_pollfds[i].fd == _serverSocket)
                     AcceptNewClient();
                 else
-                    ReceiveNewData(_pollfds[i].fd);
+                    ReceiveNewData(_pollfds[i].fd, channels);
             }
 
             // disconnections
@@ -83,33 +85,36 @@ void Server::AcceptNewClient() {
         std::cout << "New client connected: " << client_fd << std::endl;
 
         // Sending Welcome msg (ghir db smit client guest a si salah)
-        std::string client_nickname = "Guest"; 
+        // std::string client_nickname = "Guest"; 
         
-        std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network\r\n";
-
-        send(client_fd, reply.c_str(), reply.length(), 0);
+        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
+// 
+        // send(client_fd, reply.c_str(), reply.length(), 0);
     }
 }
 
-void Server::ReceiveNewData(int fd) {
+void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     std::vector<char> buffer(1024, '\0');
     ssize_t bytes = recv(fd, &buffer[0], buffer.size() - 1, 0);
 
     if (bytes > 0) {
-        _clientBuffers[fd].append(&buffer[0], bytes);
-        // DEBUG: (for data lost)
+        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes);
+        // // DEBUG: (for data lost)
         // std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
         //     << _clientBuffers[fd].size() << std::endl;
         
         size_t pos;
-        while ((pos = _clientBuffers[fd].find("\n")) != std::string::npos) {
-            std::string command = _clientBuffers[fd].substr(0, pos);
-            _clientBuffers[fd].erase(0, pos + 1);
+        while ((pos = _clientBuffers[fd].getCmd_line().find("\n")) != std::string::npos) {
+            // {DEBUG}: std::cout << "Processing command from client " << fd << "   " << _clientBuffers[fd].getCmd_line() << std::endl;
+            std::string command = _clientBuffers[fd].getCmd_line().substr(0, pos);
+
+            _clientBuffers[fd].getCmd_line().erase(0, pos + 1);
+
+            // {DEBUG}: std::cout << "Command received from client " << fd << ": " << command << std::endl;
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-                
-            std::cout << "Command from " << fd << ": " << command << std::endl;
+            HandleCommand(fd, _clientBuffers, _password, command, channels);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;

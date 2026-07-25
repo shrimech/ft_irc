@@ -1,18 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include <fcntl.h>
-#include <unistd.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <cerrno>
-#include <cstdlib>
-#include "../client/client.hpp"
+#include "../client/includes.hpp"
+#include "../channel/ChannelRegistry.hpp"
 
 class Server {
 private:
@@ -21,10 +11,10 @@ private:
     std::string _serverName;
     std::string _password;
     std::vector<struct pollfd> _pollfds;
-    std::map<int, std::string> _clientBuffers; // atwali std::map<int, Client> (a si salah)
+    std::map<int, Client> _clientBuffers; // atwali std::map<int, Client> (a si salah)
 
     void AcceptNewClient();
-    void ReceiveNewData(int fd);
+    void ReceiveNewData(int fd, ChannelRegistry& channels);
     void ClearClient(int fd);
 
 public:
