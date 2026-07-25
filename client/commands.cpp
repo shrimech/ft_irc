@@ -6,8 +6,7 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
 
     // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
-         client.NICK(client.getFd(),clientBuffers, command.params[0]);
-       
+         client.NICK(client.getFd(),clientBuffers, command.params[0]); 
     } else if ((command.command == "USER") && command.params.size() == 4) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
