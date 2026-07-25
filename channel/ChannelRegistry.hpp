@@ -2,6 +2,8 @@
 #include "Channel.hpp"
 #include <map>
 
+class Channel;
+
 class ChannelRegistry
 {
 	private:

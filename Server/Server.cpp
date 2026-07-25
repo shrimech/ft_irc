@@ -1,5 +1,6 @@
 // #include "../client/client.hpp"
 #include "../client/includes.hpp"
+
 Server::Server(int port, std::string password) : _port(port), _serverSocket(-1), _serverName("irc.Brika.net"), _password(password) {}
 
 std::string Server::getName() const {
@@ -45,7 +46,7 @@ void Server::Init() {
 }
 
 void Server::Run() {
-	// chanel registry 
+	ChannelRegistry channels; 
     while (true) {
         if (poll(&_pollfds[0], _pollfds.size(), -1) < 0)
             throw std::runtime_error("Poll failed");
@@ -58,7 +59,7 @@ void Server::Run() {
                 if (_pollfds[i].fd == _serverSocket)
                     AcceptNewClient();
                 else
-                    ReceiveNewData(_pollfds[i].fd);
+                    ReceiveNewData(_pollfds[i].fd, channels);
             }
 
             // disconnections
@@ -92,7 +93,7 @@ void Server::AcceptNewClient() {
     }
 }
 
-void Server::ReceiveNewData(int fd) {
+void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     std::vector<char> buffer(1024, '\0');
     ssize_t bytes = recv(fd, &buffer[0], buffer.size() - 1, 0);
 
@@ -113,7 +114,7 @@ void Server::ReceiveNewData(int fd) {
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-            HandleCommand(fd, _clientBuffers, _password, command);
+            HandleCommand(fd, _clientBuffers, _password, command, channels);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;

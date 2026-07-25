@@ -3,7 +3,9 @@
 #include <map>
 #include <set>
 #include <iterator>
-#include "../client/Client.hpp"
+#include "../client/client.hpp"
+
+
 
 class Channel
 {

@@ -27,7 +27,6 @@ class Client : public Authentification
         std::vector<std::string>& getParams();
         std::string& getCommand();
         void sendMessage(const std::string &message);
-    
 };
 
 

@@ -43,4 +43,3 @@ void Client::sendMessage(const std::string& message)
         }
     }
 }
-

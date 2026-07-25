@@ -6,7 +6,8 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
 
     // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
-        client.NICK(client.getFd(), command.params[0]);
+         client.NICK(client.getFd(),clientBuffers, command.params[0]);
+       
     } else if ((command.command == "USER") && command.params.size() == 4) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
@@ -17,14 +18,30 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
      else if ((command.command == "PASS") && command.params.size() == 1) {
         client.PASS(client.getFd(), command.params[0], serv_pass);
     }
-    if (client.isAuthenticated()) {
-        std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
-        std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
-        send(client.getFd(), reply.c_str(), reply.length(), 0);
-    } 
-}
+    // if (client.isAuthenticated()) {
+    //     std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
+    //     std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
+    //     send(client.getFd(), reply.c_str(), reply.length(), 0);
+    // } 
+	if (client.isAuthenticated()) {
+		std::string nick = client.getNickname();
+		std::string user = client.getUsername();
+		std::string host = "localhost"; // or resolved client IP if you have it
 
-void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine) {
+		std::string reply;
+		reply += ":irc.Brika.net 001 " + nick + " :Welcome to the Internet Relay Network " 
+				+ nick + "!" + user + "@" + host + "\r\n";
+		reply += ":irc.Brika.net 002 " + nick + " :Your host is irc.Brika.net, running version 1.0\r\n";
+		reply += ":irc.Brika.net 003 " + nick + " :This server was created today\r\n";
+		reply += ":irc.Brika.net 004 " + nick + " irc.Brika.net 1.0 o o\r\n";
+
+		std::cout << "Client " << client.getFd() << " = " << client.getUsername() 
+				<< " authenticated successfully!" << std::endl;
+		send(client.getFd(), reply.c_str(), reply.length(), 0);
+	}
+}
+void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels);
+void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine, ChannelRegistry& channels) {
     Command command;
     Client& client = clientBuffers[fd];
     client.setFd(fd);
@@ -40,7 +57,7 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
     {
         parseCommand(commandLine, command);
         // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
-        executeCommands(fd,clientBuffers,client, command);
+        executeCommands(client,clientBuffers, command, channels);
     }
     
 }
@@ -93,29 +110,42 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     std::cerr << "Recipient not found: " << recipient << std::endl;
 }
 
-void executeCommands(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command) {
-    if (command.command == "PING") {
+
+void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
+	std::vector<std::string> params = command.params;
+	if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
-		std::vector<std::string> params = command.params;
         // PRIVMSG(client, command);
 		// joinHandler(channels, client, params);
 		params.clear();
 
     } 
-    if (command.command == "PRIVMSG") {
-        PRIVMSG(fd,clientBuffers,client, command);
+    else if (command.command == "PRIVMSG") {
+        PRIVMSG(client.getFd(),clientBuffers,client, command);
     }
-    
-    else {
+	else if (command.command == "JOIN")
+		joinHandler(channels, client, params);
+	else if (command.command == "TOPIC")
+		topicHandler(channels, client, params);
+	else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }
+	params.clear();
 }
 
 void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers) {
     for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
         if (it->second.getUsername() == username) {
-            throw std::runtime_error("462 ERR_ALREADYREGISTERED");
+            throw std::runtime_error("462 UserName: ERR_ALREADYREGISTERED");
+        }
+    }
+}
+
+void checkUniqueNickname(const std::string& nickname, const std::map<int, Client>& clientBuffers) {
+    for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+        if (it->second.getNickname() == nickname) {
+            throw std::runtime_error("462 NickName: ERR_ALREADYREGISTERED");
         }
     }
 }
