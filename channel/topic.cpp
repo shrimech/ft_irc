@@ -25,6 +25,6 @@ void topicHandler(ChannelRegistry& channels, Client& client, std::vector<std::st
 		return replyMsg(" 482 ", channelName + " :You're not a channel operator", client);
 	channel->setTopic(params[1]);
 	std::string msg ="ClientPrefix TOPIC " + channelName + " :" + channel->getTopic();
-	// std::string msg = client.getPrefix() + " TOPIC " + channelName + " :" + channel->getTopic();
+	// std::string msg = client.clientPrefix() + " TOPIC " + channelName + " :" + channel->getTopic();
 	channel->broadCast(msg);
 }

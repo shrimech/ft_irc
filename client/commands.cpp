@@ -17,11 +17,27 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
      else if ((command.command == "PASS") && command.params.size() == 1) {
         client.PASS(client.getFd(), command.params[0], serv_pass);
     }
-    if (client.isAuthenticated()) {
-        std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
-        std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
-        send(client.getFd(), reply.c_str(), reply.length(), 0);
-    } 
+    // if (client.isAuthenticated()) {
+    //     std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
+    //     std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
+    //     send(client.getFd(), reply.c_str(), reply.length(), 0);
+    // } 
+	if (client.isAuthenticated()) {
+		std::string nick = client.getNickname();
+		std::string user = client.getUsername();
+		std::string host = "localhost"; // or resolved client IP if you have it
+
+		std::string reply;
+		reply += ":irc.Brika.net 001 " + nick + " :Welcome to the Internet Relay Network " 
+				+ nick + "!" + user + "@" + host + "\r\n";
+		reply += ":irc.Brika.net 002 " + nick + " :Your host is irc.Brika.net, running version 1.0\r\n";
+		reply += ":irc.Brika.net 003 " + nick + " :This server was created today\r\n";
+		reply += ":irc.Brika.net 004 " + nick + " irc.Brika.net 1.0 o o\r\n";
+
+		std::cout << "Client " << client.getFd() << " = " << client.getUsername() 
+				<< " authenticated successfully!" << std::endl;
+		send(client.getFd(), reply.c_str(), reply.length(), 0);
+	}
 }
 
 void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine, ChannelRegistry& channels) {
@@ -87,6 +103,8 @@ void executeCommands(Client& client, const Command& command, ChannelRegistry& ch
     }
 	else if (command.command == "JOIN")
 		joinHandler(channels, client, params);
+	else if (command.command == "TOPIC")
+		topicHandler(channels, client, params);
 	else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }
