@@ -24,7 +24,7 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
     } 
 }
 
-void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine) {
+void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine, ChannelRegistry& channels) {
     Command command;
     Client& client = clientBuffers[fd];
     client.setFd(fd);
@@ -40,7 +40,7 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
     {
         parseCommand(commandLine, command);
         // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
-        executeCommands(client, command);
+        executeCommands(client, command, channels);
     }
     
 }
@@ -78,18 +78,19 @@ void PRIVMSG(Client& client, const Command& command) {(void)client; // Suppress 
     // client.sendMessage(fullMessage);
 }
 
-void executeCommands(Client& client, const Command& command) {
-    if (command.command == "PING") {
+void executeCommands(Client& client, const Command& command, ChannelRegistry& channels) {
+	std::vector<std::string> params = command.params;
+	if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
-		std::vector<std::string> params = command.params;
         // PRIVMSG(client, command);
-		// joinHandler(channels, client, params);
-		params.clear();
-
-    } else {
+    }
+	else if (command.command == "JOIN")
+		joinHandler(channels, client, params);
+	else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }
+	params.clear();
 }
 
 void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers) {
