@@ -110,7 +110,11 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 }
 
 
+<<<<<<< HEAD
 void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
+=======
+void executeCommands(Client& client, const Command& command, ChannelRegistry& channels) {
+>>>>>>> 46331f7 (feat(privmsg): implement direct client messaging)
 	std::vector<std::string> params = command.params;
 	if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
