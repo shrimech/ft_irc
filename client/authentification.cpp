@@ -44,9 +44,16 @@ void Authentification::setAuthenticated() {
 }
 // ------------- authentication commands ---------------------
 
-void Authentification::NICK(int fd, const std::string &nickname) {
-    setNickname(nickname);
-    std::string reply = "Nickname set to: " + nickname + "\r\n";
+void Authentification::NICK(int fd,std::map<int, Client>& clientBuffers, const std::string &nickname) {
+    try {
+        checkUniqueNickname(nickname, clientBuffers);
+    } catch (const std::runtime_error& e) {
+        std::string reply = std::string(e.what()) + "\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
+    setUsername(nickname);
+    std::string reply = "Username set to: " + nickname + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
     if(!isAuthenticated()) {

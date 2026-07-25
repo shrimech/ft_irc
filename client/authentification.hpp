@@ -28,7 +28,7 @@ public:
     void setAuthenticated();
 
     // ------------- authentication commands ---------------------
-    void NICK(int fd, const std::string &nickname);
+    void NICK(int fd,std::map<int, Client>& clientBuffers, const std::string &nickname);
     void USER(int fd,std::map<int, Client>& clientBuffers, const std::string &username);
     void PASS(int fd, const std::string &password, const std::string &serv_pass);
 

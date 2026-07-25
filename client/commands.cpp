@@ -6,7 +6,7 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
 
     // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
-        client.NICK(client.getFd(), command.params[0]);
+        client.NICK(client.getFd(),clientBuffers, command.params[0]);
     } else if ((command.command == "USER" || command.command == "userhost") /*&& command.params.size() == 1*/) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
@@ -114,7 +114,15 @@ void executeCommands(Client& client, const Command& command, ChannelRegistry& ch
 void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers) {
     for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
         if (it->second.getUsername() == username) {
-            throw std::runtime_error("462 ERR_ALREADYREGISTERED");
+            throw std::runtime_error("462 UserName: ERR_ALREADYREGISTERED");
+        }
+    }
+}
+
+void checkUniqueNickname(const std::string& nickname, const std::map<int, Client>& clientBuffers) {
+    for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+        if (it->second.getNickname() == nickname) {
+            throw std::runtime_error("462 NickName: ERR_ALREADYREGISTERED");
         }
     }
 }
