@@ -45,6 +45,7 @@ void Server::Init() {
 }
 
 void Server::Run() {
+	// chanel registry 
     while (true) {
         if (poll(&_pollfds[0], _pollfds.size(), -1) < 0)
             throw std::runtime_error("Poll failed");

@@ -82,7 +82,11 @@ void executeCommands(Client& client, const Command& command) {
     if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
+		std::vector<std::string> params = command.params;
         // PRIVMSG(client, command);
+		// joinHandler(channels, client, params);
+		params.clear();
+
     } else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }
