@@ -1,9 +1,10 @@
 SERV = ./Server/
 CLIENT = ./client
+CHANEL = ./chanel
 
-SRC = $(SERV)Server.cpp main.cpp $(CLIENT)/authentification.cpp $(CLIENT)/commands.cpp $(CLIENT)/client.cpp
+SRC = $(SERV)Server.cpp main.cpp $(CLIENT)/authentification.cpp $(CLIENT)/commands.cpp $(CLIENT)/client.cpp 
 OBJ = $(SRC:.cpp=.o)
-HDR = $(SERV)Server.hpp $(CLIENT)/authentification.hpp $(CLIENT)/commands.hpp $(CLIENT)/client.hpp
+HDR = $(SERV)Server.hpp $(CLIENT)/authentification.hpp $(CLIENT)/commands.hpp $(CLIENT)/client.hpp 
 Name = irserve
 CXX = c++
 CXXFLAGS =   -Wall -Wextra -Werror -std=c++98 -g

@@ -7,7 +7,7 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
     // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
         client.NICK(client.getFd(), command.params[0]);
-    } else if ((command.command == "USER" || command.command == "userhost") /*&& command.params.size() == 1*/) {
+    } else if ((command.command == "USER") && command.params.size() == 4) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
     else if ((command.command == "PASS") && client.getPassword() == serv_pass) {
@@ -40,7 +40,7 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
     {
         parseCommand(commandLine, command);
         // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
-        executeCommands(client, command);
+        executeCommands(fd,clientBuffers,client, command);
     }
     
 }
@@ -54,17 +54,23 @@ void parseCommand(const std::string& cmd_line, Command& command) {
         start = cmd_line.find_first_not_of(" \t", end);
 
         while (start != std::string::npos) {
-            end = cmd_line.find_first_of(" \t", start);
+            if (cmd_line[start] == ':') {
+                end = cmd_line.length();
+                start++;
+            }
+            else {
+                end = cmd_line.find_first_of(" \t", start);
+            }
             command.params.push_back(cmd_line.substr(start, end - start));
             start = cmd_line.find_first_not_of(" \t", end);
         }
     }
 }
 
-
-
-void PRIVMSG(Client& client, const Command& command) {(void)client; // Suppress unused parameter warning
+void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command) {
     if (command.params.size() != 2) {
+        std::string reply = "PRIVMSG <recipient> <message> . \r\n";
+        send(fd,reply.c_str(),reply.length(),0);
         std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
         return;
     }
@@ -72,13 +78,22 @@ void PRIVMSG(Client& client, const Command& command) {(void)client; // Suppress 
     const std::string& recipient = command.params[0];
     const std::string& message = command.params[1];
 
-    // Construct the message to send
-    std::string fullMessage = "PRIVMSG to " + recipient + " :" + message + "  Sent successfully!\r\n";
-    std::cout << fullMessage << std::endl; // For demonstration, print the message to stdout
-    // client.sendMessage(fullMessage);
+    // Find the recipient in the clientBuffers
+    for (std::map<int, Client>::const_iterator pair = clientBuffers.begin(); pair != clientBuffers.end(); ++pair) {
+        if(pair->second.getNickname() == recipient || pair->second.getUsername() == recipient) {
+            // Recipient found, send the message
+            std::string fullMessage = "PRIVMSG from " + client.getNickname() + " : " + message + "\r\n";
+            send(pair->second.getFd(), fullMessage.c_str(), fullMessage.length(), 0);
+            std::cout << "Message sent to " << recipient << ": " << message << std::endl;
+            return;
+        }
+    }
+
+    // If recipient not found
+    std::cerr << "Recipient not found: " << recipient << std::endl;
 }
 
-void executeCommands(Client& client, const Command& command) {
+void executeCommands(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command) {
     if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
@@ -87,7 +102,12 @@ void executeCommands(Client& client, const Command& command) {
 		// joinHandler(channels, client, params);
 		params.clear();
 
-    } else {
+    } 
+    if (command.command == "PRIVMSG") {
+        PRIVMSG(fd,clientBuffers,client, command);
+    }
+    
+    else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }
 }
