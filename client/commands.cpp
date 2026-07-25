@@ -112,13 +112,19 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
 void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
 	std::vector<std::string> params = command.params;
+    if(command.command == "PASS" || command.command == "USER" || command.command == "NICK")
+    {
+        std::string reply =  "U're already authentified ! \r\n";
+        send(client.getFd(),reply.c_str(),reply.length(),0);
+        std::cerr << "client "<< client.getUsername() << "! already authentified !" << std::endl;
+        return;
+    }
 	if (command.command == "PING") {
         std::string reply = "PONG :server\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
         // PRIVMSG(client, command);
 		// joinHandler(channels, client, params);
 		params.clear();
-
     } 
     else if (command.command == "PRIVMSG") {
         PRIVMSG(client.getFd(),clientBuffers,client, command);

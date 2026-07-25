@@ -52,8 +52,8 @@ void Authentification::NICK(int fd,std::map<int, Client>& clientBuffers, const s
         send(fd, reply.c_str(), reply.length(), 0);
         return;
     }
-    setUsername(nickname);
-    std::string reply = "Username set to: " + nickname + "\r\n";
+    setNickname(nickname);
+    std::string reply = "NickName set to: " + nickname + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
     if(!isAuthenticated()) {
