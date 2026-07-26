@@ -106,7 +106,9 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     }
 
     // If recipient not found
-    errorHandler(401,client);
+    std::string reply = "Recipient " + recipient + " not found.\r\n";
+    send(fd, reply.c_str(), reply.length(), 0);
+    std::cerr << "Recipient " << recipient << " not found." << std::endl;
 }
 
 

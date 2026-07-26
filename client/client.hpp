@@ -29,22 +29,4 @@ class Client : public Authentification
         void sendMessage(const std::string &message);
 };
 
-
-class message
-{
-    protected:
-        std::string _content;
-        std::string _recipient;
-        int         _server_fd;
-
-    public:
-        message(const std::string &content, const std::string &sender, const std::string &recipient);
-        const std::string &getContent() const;
-        const std::string &getSender() const;
-        const std::string &getRecipient() const;
-        void setContent(const std::string &content);
-        void setSender(const std::string &sender);
-        void setRecipient(const std::string &recipient);
-
-};
 #endif
