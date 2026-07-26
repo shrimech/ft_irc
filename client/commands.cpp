@@ -1,4 +1,5 @@
 #include "includes.hpp"
+#include "../Bot/Bot.hpp"
 
 void authentificate(Client& client,std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine) {
     Command command;
@@ -39,8 +40,8 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
 		send(client.getFd(), reply.c_str(), reply.length(), 0);
 	}
 }
-void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels);
-void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine, ChannelRegistry& channels) {
+void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels, QuizBot& bot);
+void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::string& serv_pass, const std::string& commandLine, ChannelRegistry& channels, QuizBot& bot) {
     Command command;
     Client& client = clientBuffers[fd];
     client.setFd(fd);
@@ -56,7 +57,7 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
     {
         parseCommand(commandLine, command);
         // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
-        executeCommands(client,clientBuffers, command, channels);
+        executeCommands(client,clientBuffers, command, channels, bot);
     }
     
 }
@@ -83,13 +84,35 @@ void parseCommand(const std::string& cmd_line, Command& command) {
     }
 }
 
-void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command, ChannelRegistry& channels) {
+void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command, ChannelRegistry& channels, QuizBot& bot) {
+    
+    // hadchi ana li zedto bash itparsa l Bot
+    if (command.params.size() == 1 || command.params.size() == 2) {
+        const std::string& target = command.params[0];
+        
+        if (target == "QuizBot" || target == "!bot" || target == bot.getName()) {
+            // 1 arg: "!help", 2 args: params[1]
+            std::string botMsg = (command.params.size() == 1) ? "!help" : command.params[1];
+            std::string botReply = bot.handleCommand(fd, client.getNickname(), botMsg);
+            send(fd, botReply.c_str(), botReply.length(), 0);
+            std::cout << "[BOT] Replied to " << client.getNickname() << ": " << botMsg << std::endl;
+            return;
+        }
+    }
+
     if (command.params.size() != 2) {
         std::string reply = "PRIVMSG <recipient> <message> . \r\n";
         send(fd,reply.c_str(),reply.length(),0);
         std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
         return;
     }
+
+        // o hadi li foq khas tkon haka
+    // if (command.params.size() != 2) {
+    //     std::string reply = "411 " + sender.getNickname() + " :No recipient given (PRIVMSG)\r\n";
+    //     send(fd, reply.c_str(), reply.length(), 0);
+    //     return;
+    // }
 
     const std::string& recipient = command.params[0];
     const std::string& message = command.params[1];
@@ -100,6 +123,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
         std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
         return;
     }
+
     if (recipient[0] == '#') {
         if (!channels.channelExists(recipient)) {
             std::string reply = "Channel " + recipient + " does not exist.\r\n";
@@ -142,13 +166,16 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     }
 
     // If recipient not found
+        // qadit right format dial hadi 
+    // std::string errorReply = "401 " + client.getNickname() + " " + recipient + " :No such nick/channel\r\n";
+    // send(fd, errorReply.c_str(), errorReply.length(), 0);
     std::string reply = "Recipient " + recipient + " not found.\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     std::cerr << "Recipient " << recipient << " not found." << std::endl;
 }
 
 
-void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
+void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels, QuizBot& bot) {
 	std::vector<std::string> params = command.params;
     if(command.command == "PASS")
     {
@@ -171,7 +198,7 @@ void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const
         client.NICK(client.getFd(),clientBuffers, command.params[0]);
     }
     else if (command.command == "PRIVMSG") {
-        PRIVMSG(client.getFd(),clientBuffers,client, command, channels);
+        PRIVMSG(client.getFd(),clientBuffers,client, command, channels, bot);
     }
 	else if (command.command == "JOIN")
 		joinHandler(channels, client, params);

@@ -1,9 +1,12 @@
+#pragma once
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
 #include "../client/includes.hpp"
 #include "../channel/ChannelRegistry.hpp"
+#include "../Bot/Bot.hpp"
 
+// class QuizBot;
 class Server {
 private:
     int _port;
@@ -12,6 +15,7 @@ private:
     std::string _password;
     std::vector<struct pollfd> _pollfds;
     std::map<int, Client> _clientBuffers; // atwali std::map<int, Client> (a si salah)
+    QuizBot _bot;
 
     void AcceptNewClient();
     void ReceiveNewData(int fd, ChannelRegistry& channels);

@@ -19,6 +19,7 @@
 #include "client.hpp"
 #include "commands.hpp"
 #include "../Server/Server.hpp"
+#include "../Bot/Bot.hpp"
 
 
 #endif
