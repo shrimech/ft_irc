@@ -83,7 +83,7 @@ void parseCommand(const std::string& cmd_line, Command& command) {
     }
 }
 
-void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command) {
+void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command, ChannelRegistry& channels) {
     if (command.params.size() != 2) {
         std::string reply = "PRIVMSG <recipient> <message> . \r\n";
         send(fd,reply.c_str(),reply.length(),0);
@@ -94,6 +94,42 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     const std::string& recipient = command.params[0];
     const std::string& message = command.params[1];
 
+    if (recipient.empty() || message.empty()) {
+        std::string reply = "PRIVMSG <recipient> <message> . \r\n";
+        send(fd,reply.c_str(),reply.length(),0);
+        std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
+        return;
+    }
+    if (recipient[0] == '#') {
+        if (!channels.channelExists(recipient)) {
+            std::string reply = "Channel " + recipient + " does not exist.\r\n";
+            send(fd, reply.c_str(), reply.length(), 0);
+            std::cerr << "Channel " << recipient << " does not exist." << std::endl;
+            return;
+        }
+        else {
+            Channel* channel = channels.findChannel(recipient);
+            if (channel) {
+                // Check if the client is part of the channel
+                // Assuming Channel class has a method to check membership
+                if (!channel->isMember(client.getFd())) {
+                    std::string reply = "You are not a member of channel " + recipient + ".\r\n";
+                    send(fd, reply.c_str(), reply.length(), 0);
+                    std::cerr << "Client " << client.getFd() << " is not a member of channel " << recipient << "." << std::endl;
+                    return;
+                }
+                // :salah!salah@localhost PRIVMSG #general :Hello
+                std::string fullMessage = ":" + client.getUsername()+"!"+client.getNickname() + "@localhost" + " PRIVMSG " + recipient + " :" + message + "\r\n";
+                channel->broadCast(fullMessage, client.getFd());
+                std::cout << "Message sent to channel " << recipient << ": " << message << std::endl;
+                return;
+            }
+        }
+        std::string reply = "PRIVMSG to channels is not implemented yet.\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        std::cerr << "PRIVMSG to channels is not implemented yet." << std::endl;
+        return;
+    }
     // Find the recipient in the clientBuffers
     for (std::map<int, Client>::const_iterator pair = clientBuffers.begin(); pair != clientBuffers.end(); ++pair) {
         if(pair->second.getNickname() == recipient || pair->second.getUsername() == recipient) {
@@ -114,7 +150,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
 void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels) {
 	std::vector<std::string> params = command.params;
-    if(command.command == "PASS" || command.command == "USER" || command.command == "NICK")
+    if(command.command == "PASS")
     {
         std::string reply =  "U're already authentified ! \r\n";
         send(client.getFd(),reply.c_str(),reply.length(),0);
@@ -127,9 +163,15 @@ void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const
         // PRIVMSG(client, command);
 		// joinHandler(channels, client, params);
 		params.clear();
-    } 
+    }
+    else if (command.command == "USER" && command.params.size() == 4) {
+        client.USER(client.getFd(),clientBuffers, command.params[0]);
+    }
+    else if (command.command == "NICK" && command.params.size() == 1) {
+        client.NICK(client.getFd(),clientBuffers, command.params[0]);
+    }
     else if (command.command == "PRIVMSG") {
-        PRIVMSG(client.getFd(),clientBuffers,client, command);
+        PRIVMSG(client.getFd(),clientBuffers,client, command, channels);
     }
 	else if (command.command == "JOIN")
 		joinHandler(channels, client, params);

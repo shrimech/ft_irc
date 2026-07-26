@@ -17,6 +17,6 @@ void checkUniqueUsername(const std::string& username, const std::map<int, Client
 void checkUniqueNickname(const std::string& nickname, const std::map<int, Client>& clientBuffers);
 
 // ---------- commands ------------------------------
-void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command);
+void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command, ChannelRegistry& channels);
 
 #endif
