@@ -131,7 +131,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
     if (recipient[0] == '#') {
         if (!channels.channelExists(recipient)) {
-            // FIXED: Changed to RFC 403 ERR_NOSUCHCHANNEL
+            // 403 ERR_NOSUCHCHANNEL
             std::string reply = "403 " + client.getNickname() + " " + recipient + " :No such channel\r\n";
             send(fd, reply.c_str(), reply.length(), 0);
             std::cerr << "Channel " << recipient << " does not exist." << std::endl;
