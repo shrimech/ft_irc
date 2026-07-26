@@ -100,25 +100,30 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
         }
     }
 
-    if (command.params.size() != 2) {
-        std::string reply = "PRIVMSG <recipient> <message> . \r\n";
-        send(fd,reply.c_str(),reply.length(),0);
-        std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
-        return;
-    }
-
-        // o hadi li foq khas tkon haka
     // if (command.params.size() != 2) {
-    //     std::string reply = "411 " + sender.getNickname() + " :No recipient given (PRIVMSG)\r\n";
-    //     send(fd, reply.c_str(), reply.length(), 0);
+    //     std::string reply = "PRIVMSG <recipient> <message> . \r\n";
+    //     send(fd,reply.c_str(),reply.length(),0);
+    //     std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
     //     return;
     // }
+
+        // o hadi li foq khas tkon haka
+    if (command.params.empty()) {
+        std::string reply = "411 " + client.getNickname() + " :No recipient given (PRIVMSG)\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
+    if (command.params.size() != 2) {
+        std::string reply = "412 " + client.getNickname() + " :No text to send\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
 
     const std::string& recipient = command.params[0];
     const std::string& message = command.params[1];
 
     if (recipient.empty() || message.empty()) {
-        std::string reply = "PRIVMSG <recipient> <message> . \r\n";
+        std::string reply = "412 " + client.getNickname() + " :No text to send\r\n";
         send(fd,reply.c_str(),reply.length(),0);
         std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
         return;
@@ -126,7 +131,8 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
     if (recipient[0] == '#') {
         if (!channels.channelExists(recipient)) {
-            std::string reply = "Channel " + recipient + " does not exist.\r\n";
+            // FIXED: Changed to RFC 403 ERR_NOSUCHCHANNEL
+            std::string reply = "403 " + client.getNickname() + " " + recipient + " :No such channel\r\n";
             send(fd, reply.c_str(), reply.length(), 0);
             std::cerr << "Channel " << recipient << " does not exist." << std::endl;
             return;
@@ -137,19 +143,21 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
                 // Check if the client is part of the channel
                 // Assuming Channel class has a method to check membership
                 if (!channel->isMember(client.getFd())) {
-                    std::string reply = "You are not a member of channel " + recipient + ".\r\n";
+                    // FIXED: Changed to RFC 404 ERR_CANNOTSENDTOCHAN
+                    std::string reply = "404 " + client.getNickname() + " " + recipient + " :Cannot send to channel\r\n";
                     send(fd, reply.c_str(), reply.length(), 0);
                     std::cerr << "Client " << client.getFd() << " is not a member of channel " << recipient << "." << std::endl;
                     return;
                 }
                 // :salah!salah@localhost PRIVMSG #general :Hello
-                std::string fullMessage = ":" + client.getUsername()+"!"+client.getNickname() + "@localhost" + " PRIVMSG " + recipient + " :" + message + "\r\n";
+                std::string fullMessage = ":" + client.getNickname() + "!" + client.getUsername() + "@localhost PRIVMSG " + recipient + " :" + message + "\r\n";
                 channel->broadCast(fullMessage, client.getFd());
                 std::cout << "Message sent to channel " << recipient << ": " << message << std::endl;
                 return;
             }
         }
-        std::string reply = "PRIVMSG to channels is not implemented yet.\r\n";
+        // FIXED: Changed to RFC 404 if channel exists but sending fails
+        std::string reply = "404 " + client.getNickname() + " " + recipient + " :Cannot send to channel\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
         std::cerr << "PRIVMSG to channels is not implemented yet." << std::endl;
         return;
@@ -158,7 +166,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     for (std::map<int, Client>::const_iterator pair = clientBuffers.begin(); pair != clientBuffers.end(); ++pair) {
         if(pair->second.getNickname() == recipient || pair->second.getUsername() == recipient) {
             // Recipient found, send the message
-            std::string fullMessage = "PRIVMSG from " + client.getNickname() + " : " + message + "\r\n";
+            std::string fullMessage = ":" + client.getNickname() + "!" + client.getUsername() + "@localhost PRIVMSG " + recipient + " :" + message + "\r\n";
             send(pair->second.getFd(), fullMessage.c_str(), fullMessage.length(), 0);
             std::cout << "Message sent to " << recipient << ": " << message << std::endl;
             return;
@@ -167,10 +175,10 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
     // If recipient not found
         // qadit right format dial hadi 
-    // std::string errorReply = "401 " + client.getNickname() + " " + recipient + " :No such nick/channel\r\n";
-    // send(fd, errorReply.c_str(), errorReply.length(), 0);
-    std::string reply = "Recipient " + recipient + " not found.\r\n";
-    send(fd, reply.c_str(), reply.length(), 0);
+    std::string errorReply = "401 " + client.getNickname() + " " + recipient + " :No such nick/channel\r\n";
+    send(fd, errorReply.c_str(), errorReply.length(), 0);
+    // std::string reply = "Recipient " + recipient + " not found.\r\n";
+    // send(fd, reply.c_str(), reply.length(), 0);
     std::cerr << "Recipient " << recipient << " not found." << std::endl;
 }
 

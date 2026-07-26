@@ -18,7 +18,8 @@ Server::~Server() {
 
 void Server::Init() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (_serverSocket < 0) throw std::runtime_error("Failed to create socket");
+    if (_serverSocket < 0) 
+        throw std::runtime_error("Failed to create socket");
 
     int opt = 1;
     setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -33,6 +34,7 @@ void Server::Init() {
     if (bind(_serverSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         throw std::runtime_error("Failed to bind");
 
+    // /proc/sys/net/core/somaxconn
     if (listen(_serverSocket, SOMAXCONN) < 0)
         throw std::runtime_error("Failed to listen");
 
@@ -73,6 +75,11 @@ void Server::Run() {
 
 void Server::AcceptNewClient() {
     int client_fd = accept(_serverSocket, NULL, NULL);
+    if (client_fd < 0) {
+        if (errno == EMFILE || errno == ENFILE)
+            std::cerr << "[WARNING] Server reached maximum open file descriptors limit!" << std::endl;
+    }
+
     if (client_fd != -1) {
         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         
