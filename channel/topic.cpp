@@ -19,12 +19,10 @@ void topicHandler(ChannelRegistry& channels, Client& client, std::vector<std::st
 			return replyMsg(" 331 ", channelName + " :No topic is set.", client);
 		else
 			return replyMsg(" 332 ", channelName + " :" + channel->getTopic(), client);
-		// 333
 	}
 	if (channel->isTopicRestricted() && !channel->isOperator(fd))
 		return replyMsg(" 482 ", channelName + " :You're not a channel operator", client);
 	channel->setTopic(params[1]);
-	std::string msg ="ClientPrefix TOPIC " + channelName + " :" + channel->getTopic();
-	// std::string msg = client.clientPrefix() + " TOPIC " + channelName + " :" + channel->getTopic();
+	std::string msg = clientPrefix(client) + " TOPIC " + channelName + " :" + channel->getTopic() + "\r\n";
 	channel->broadCast(msg);
 }

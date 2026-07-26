@@ -177,6 +177,12 @@ void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const
 		joinHandler(channels, client, params);
 	else if (command.command == "TOPIC")
 		topicHandler(channels, client, params);
+	else if (command.command == "INVITE")
+		inviteHandler(channels, client, params, clientBuffers);
+	else if (command.command == "KICK")
+    	kickHandler(channels, clientBuffers, client, params);
+	else if (command.command == "MODE")
+    	modeHandler(channels, clientBuffers, client, params);
 	else {
         std::cerr << "Unknown command: " << command.command << std::endl;
     }

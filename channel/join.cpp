@@ -1,16 +1,5 @@
 #include "ChannelCommands.hpp"
 
-void replyMsg(const std::string& rcode, const std::string& msg, Client& client)
-{
-	// prefix = servername / ( nickname [ [ "!" user ] "@" host ] )
-	std::string nickName = client.getNickname();
-	client.sendMessage(":irc.1337.brika" + rcode + nickName + " " + msg  + "\r\n");
-}
-
-std::string clientPrefix(Client& client) {
-    return ":" + client.getNickname() + "!" + client.getUsername() + "@localhost";
-}
-
 void joinHandler(ChannelRegistry& channels, Client& client, std::vector<std::string> params)
 {
 	if (params.empty())
@@ -35,7 +24,6 @@ void joinHandler(ChannelRegistry& channels, Client& client, std::vector<std::str
 	if (channel->getMemberCount() == 0)
 		channel->addOperator(fd);
 	channel->addMember(fd, &client);
-	// std::string msg = "ClientPrefix JOIN " + channelName + "\r\n";
 	std::string msg = clientPrefix(client) + " JOIN " + channelName + "\r\n";
 	channel->broadCast(msg);
 	replyMsg(" 353 ", "= " + channelName + " :" + channel->getMembersName(), client);
