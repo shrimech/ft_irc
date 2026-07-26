@@ -16,7 +16,7 @@ void parseCommand(const std::string& cmd_line, Command& command);
 void checkUniqueUsername(const std::string& username, const std::map<int, Client>& clientBuffers);
 void checkUniqueNickname(const std::string& nickname, const std::map<int, Client>& clientBuffers);
 
-
+void errorHandler(int err, Client &client);
 // ---------- commands ------------------------------
 void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command);
 
