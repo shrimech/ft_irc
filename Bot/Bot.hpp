@@ -142,3 +142,8 @@ public:
 };
 
 #endif
+
+//PRIVMSG !bot
+//PRIVMSG !bot :!quiz (next or to bring the quiz(firstly))
+//PRIVMSG !bot :!answer <number>
+//PRIVMSG !bot :!help
