@@ -73,31 +73,52 @@ void Server::Run() {
     }
 }
 
-void Server::AcceptNewClient() {
+// void Server::AcceptNewClient() {
+//     int client_fd = accept(_serverSocket, NULL, NULL);
+//     if (client_fd < 0) {
+//         if (errno == EMFILE || errno == ENFILE)
+//             std::cerr << "[WARNING] Server reached maximum open file descriptors limit!" << std::endl;
+//     }
+
+//     if (client_fd != -1) {
+//         fcntl(client_fd, F_SETFL, O_NONBLOCK);
+        
+//         struct pollfd cli;
+//         cli.fd = client_fd;
+//         cli.events = POLLIN;
+//         cli.revents = 0;
+//         _pollfds.push_back(cli);
+        
+//         std::cout << "New client connected: " << client_fd << std::endl;
+
+//         // Sending Welcome msg (ghir db smit client guest a si salah)
+//         // std::string client_nickname = "Guest"; 
+        
+//         // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
+// // 
+//         // send(client_fd, reply.c_str(), reply.length(), 0);
+//     }
+// }
+
+void Server::AcceptNewClient()
+{
     int client_fd = accept(_serverSocket, NULL, NULL);
-    if (client_fd < 0) {
-        if (errno == EMFILE || errno == ENFILE)
-            std::cerr << "[WARNING] Server reached maximum open file descriptors limit!" << std::endl;
+
+    if (client_fd == -1)
+    {
+        std::cerr << "accept() failed" << std::endl;
+        return;
     }
 
-    if (client_fd != -1) {
-        fcntl(client_fd, F_SETFL, O_NONBLOCK);
-        
-        struct pollfd cli;
-        cli.fd = client_fd;
-        cli.events = POLLIN;
-        cli.revents = 0;
-        _pollfds.push_back(cli);
-        
-        std::cout << "New client connected: " << client_fd << std::endl;
+    fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
-        // Sending Welcome msg (ghir db smit client guest a si salah)
-        // std::string client_nickname = "Guest"; 
-        
-        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
-// 
-        // send(client_fd, reply.c_str(), reply.length(), 0);
-    }
+    struct pollfd cli;
+    cli.fd = client_fd;
+    cli.events = POLLIN;
+    cli.revents = 0;
+    _pollfds.push_back(cli);
+
+    std::cout << "New client connected: " << client_fd << std::endl;
 }
 
 void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
