@@ -21,7 +21,7 @@ void modeHandler(ChannelRegistry& channels, std::map<int, Client>& clients, Clie
 		return replyMsg(" 461 ", "MODE :Not enough parameters", client);
 	std::string channelName = params[0];
 	if (channelName.size() < 2 || (channelName[0] != '#' && channelName[0] != '&'))
-		return replyMsg(" 403 ", channelName + " :No such channel", client);
+		return ;
 	Channel* channel = channels.findChannel(channelName);
 	if (!channel)
 		return replyMsg(" 403 ", channelName + " :No such channel", client);
