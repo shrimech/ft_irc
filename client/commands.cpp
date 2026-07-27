@@ -163,7 +163,7 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     }
     // Find the recipient in the clientBuffers
     for (std::map<int, Client>::const_iterator pair = clientBuffers.begin(); pair != clientBuffers.end(); ++pair) {
-        if(pair->second.getNickname() == recipient || pair->second.getUsername() == recipient) {
+        if(pair->second.getNickname() == recipient) {
             // Recipient found, send the message
             std::string fullMessage = ":" + client.getNickname() + "!" + client.getUsername() + "@localhost PRIVMSG " + recipient + " :" + message + "\r\n";
             send(pair->second.getFd(), fullMessage.c_str(), fullMessage.length(), 0);
