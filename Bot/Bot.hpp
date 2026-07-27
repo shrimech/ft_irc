@@ -139,6 +139,14 @@ public:
         }
         return prefix + "Unknown bot command. Type !help for info.\r\n";
     }
+
+    void removeClient(int client_fd) {
+        std::map<int, size_t>::iterator it = _userProgress.find(client_fd);
+        if (it != _userProgress.end()) {
+            _userProgress.erase(it);
+            std::cout << "[BOT] Cleaned up progress memory for disconnected FD: " << client_fd << std::endl;
+        }
+    }
 };
 
 #endif

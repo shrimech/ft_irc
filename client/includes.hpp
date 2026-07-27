@@ -13,9 +13,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
-#include <cerrno>
 #include <cstdlib>
 #include "authentification.hpp"
+#include "ctype.h"
 #include "client.hpp"
 #include "commands.hpp"
 #include "../Server/Server.hpp"

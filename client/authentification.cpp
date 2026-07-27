@@ -44,21 +44,57 @@ void Authentification::setAuthenticated() {
 }
 // ------------- authentication commands ---------------------
 
+static std::string makeUniqueUsername(int fd, const std::string& username, const std::map<int, Client>& clientBuffers) {
+    // Mirror Libera-style behavior: if a requested username is already in use,
+    // keep appending '_' until the name becomes unique for this session.
+    std::string candidate = username;
+
+    while (true) {
+        bool taken = false;
+        for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+            if (it->first == fd)
+                continue;
+            if (it->second.getUsername() == candidate) {
+                taken = true;
+                break;
+            }
+        }
+        if (!taken)
+            return candidate;
+        candidate += "_";
+    }
+}
+
+static std::string makeUniqueNickname(int fd, const std::string& nickname, const std::map<int, Client>& clientBuffers) {
+    // Do the same fallback for nicknames so registration can still complete
+    // instead of failing the first duplicate request with an auth error.
+    std::string candidate = nickname;
+
+    while (true) {
+        bool taken = false;
+        for (std::map<int, Client>::const_iterator it = clientBuffers.begin(); it != clientBuffers.end(); ++it) {
+            if (it->first == fd)
+                continue;
+            if (it->second.getNickname() == candidate) {
+                taken = true;
+                break;
+            }
+        }
+        if (!taken)
+            return candidate;
+        candidate += "_";
+    }
+}
+
 void Authentification::NICK(int fd,std::map<int, Client>& clientBuffers, const std::string &nickname) {
-    try {
-        checkUniqueNickname(nickname, clientBuffers);
-    } catch (const std::runtime_error& e) {
-        std::string reply = std::string(e.what()) + "\r\n";
-        send(fd, reply.c_str(), reply.length(), 0);
-        return;
-    }
-    setNickname(nickname);
+    std::string uniqueNickname = makeUniqueNickname(fd, nickname, clientBuffers);
+    setNickname(uniqueNickname);
     if (isAuthenticated()) {
-        std::string reply = "you are now known as: " + nickname + "\r\n";
+        std::string reply = "you are now known as: " + uniqueNickname + "\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
         return;
     }
-    std::string reply = "NickName set to: " + nickname + "\r\n";
+    std::string reply = "NickName set to: " + uniqueNickname + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
     if(!isAuthenticated()) {
@@ -68,20 +104,14 @@ void Authentification::NICK(int fd,std::map<int, Client>& clientBuffers, const s
 }
 
 void Authentification::USER(int fd,std::map<int, Client>& clientBuffers, const std::string &username) {
-    try {
-        checkUniqueUsername(username, clientBuffers);
-    } catch (const std::runtime_error& e) {
-        std::string reply = std::string(e.what()) + "\r\n";
-        send(fd, reply.c_str(), reply.length(), 0);
-        return;
-    }
-    setUsername(username);
+    std::string uniqueUsername = makeUniqueUsername(fd, username, clientBuffers);
+    setUsername(uniqueUsername);
     if (isAuthenticated()) {
-        std::string reply = "you are now known as: " + username + "\r\n";
+        std::string reply = "you are now known as: " + uniqueUsername + "\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
         return;
     }
-    std::string reply = "Username set to: " + username + "\r\n";
+    std::string reply = "Username set to: " + uniqueUsername + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
     if(!isAuthenticated()) {
@@ -110,3 +140,4 @@ void Authentification::PASS(int fd, const std::string &password, const std::stri
     }
             
 }
+

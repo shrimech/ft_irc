@@ -1,6 +1,11 @@
 // #include "../client/client.hpp"
 #include "../client/includes.hpp"
 
+void Server::signalHandler(int sig) {
+    (void)sig;
+    g_shutdown_requested = true;
+}
+
 Server::Server(int port, std::string password) : _port(port), _serverSocket(-1), _serverName("irc.Brika.net"), _password(password) {}
 
 std::string Server::getName() const {
@@ -18,12 +23,11 @@ Server::~Server() {
 
 void Server::Init() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (_serverSocket < 0) 
-        throw std::runtime_error("Failed to create socket");
+    if (_serverSocket < 0) throw std::runtime_error("Failed to create socket");
 
     int opt = 1;
     setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
+    fcntl(_serverSocket, F_SETFL, O_NONBLOCK); // ??
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -34,7 +38,6 @@ void Server::Init() {
     if (bind(_serverSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         throw std::runtime_error("Failed to bind");
 
-    // /proc/sys/net/core/somaxconn
     if (listen(_serverSocket, SOMAXCONN) < 0)
         throw std::runtime_error("Failed to listen");
 
@@ -49,9 +52,9 @@ void Server::Init() {
 
 void Server::Run() {
 	ChannelRegistry channels; 
-    while (true) {
+    while (!g_shutdown_requested) {
         if (poll(&_pollfds[0], _pollfds.size(), -1) < 0)
-            throw std::runtime_error("Poll failed");
+            continue;
 
         for (size_t i = 0; i < _pollfds.size(); i++) {
             if (_pollfds[i].revents == 0) 
@@ -66,59 +69,35 @@ void Server::Run() {
 
             // disconnections
             if (_pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                ClearClient(_pollfds[i].fd);
+                ClearClient(_pollfds[i].fd, channels);
                 i--; // cuz ClearClient() modify (pollfd) vect
             }
         }
     }
 }
 
-// void Server::AcceptNewClient() {
-//     int client_fd = accept(_serverSocket, NULL, NULL);
-//     if (client_fd < 0) {
-//         if (errno == EMFILE || errno == ENFILE)
-//             std::cerr << "[WARNING] Server reached maximum open file descriptors limit!" << std::endl;
-//     }
-
-//     if (client_fd != -1) {
-//         fcntl(client_fd, F_SETFL, O_NONBLOCK);
-        
-//         struct pollfd cli;
-//         cli.fd = client_fd;
-//         cli.events = POLLIN;
-//         cli.revents = 0;
-//         _pollfds.push_back(cli);
-        
-//         std::cout << "New client connected: " << client_fd << std::endl;
-
-//         // Sending Welcome msg (ghir db smit client guest a si salah)
-//         // std::string client_nickname = "Guest"; 
-        
-//         // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
-// // 
-//         // send(client_fd, reply.c_str(), reply.length(), 0);
-//     }
-// }
-
-void Server::AcceptNewClient()
-{
+void Server::AcceptNewClient() {
     int client_fd = accept(_serverSocket, NULL, NULL);
+    if (client_fd != -1) {
+        fcntl(client_fd, F_SETFL, O_NONBLOCK);
+        
+        struct pollfd cli;
+        cli.fd = client_fd;
+        cli.events = POLLIN;
+        cli.revents = 0;
+        _pollfds.push_back(cli);
+        
+        std::cout << "New client connected: " << client_fd << std::endl;
 
-    if (client_fd == -1)
-    {
-        std::cerr << "accept() failed" << std::endl;
-        return;
+        // Sending Welcome msg (ghir db smit client guest a si salah)
+        // std::string client_nickname = "Guest"; 
+        
+        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
+// 
+        // send(client_fd, reply.c_str(), reply.length(), 0);
     }
-
-    fcntl(client_fd, F_SETFL, O_NONBLOCK);
-
-    struct pollfd cli;
-    cli.fd = client_fd;
-    cli.events = POLLIN;
-    cli.revents = 0;
-    _pollfds.push_back(cli);
-
-    std::cout << "New client connected: " << client_fd << std::endl;
+	else
+		std::cerr << "[SERVER]: fail to accept new client" << std::endl;
 }
 
 void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
@@ -127,7 +106,8 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     // QuizBot bot;
 
     if (bytes > 0) {
-        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes);
+		
+        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes); // 510
         // // DEBUG: (for data lost)
         // std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
         //     << _clientBuffers[fd].size() << std::endl;
@@ -143,11 +123,11 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-            HandleCommand(fd, _clientBuffers, _password, command, channels, this->_bot);
-        }
+				HandleCommand(fd, _clientBuffers, _password, command, channels, this->_bot);
+			}
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;
-        ClearClient(fd);
+        ClearClient(fd, channels);
     }
 }
 
@@ -164,10 +144,13 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
 //     }
 // }
 
-void Server::ClearClient(int fd) {
+void Server::ClearClient(int fd, ChannelRegistry& channels) {
+    // Remove the socket from every channel first so channel member lists do not
+    // keep dangling Client* pointers after the map entry is erased.
+    channels.removeClientFromAllChannels(fd);
     close(fd);
     _clientBuffers.erase(fd);
-
+	_bot.removeClient(fd);
     std::vector<struct pollfd>::iterator it = _pollfds.begin();
     
     while (it != _pollfds.end()) {

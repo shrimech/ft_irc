@@ -2,7 +2,14 @@
 
 ChannelRegistry::ChannelRegistry() {}
 
-ChannelRegistry::~ChannelRegistry() {}
+ChannelRegistry::~ChannelRegistry() {
+	std::map<std::string, Channel*>::iterator it = _channels.begin();
+	while (it != _channels.end()) {
+		delete it->second;
+		++it;
+	}
+	_channels.clear();
+}
 
 Channel* ChannelRegistry::findChannel(const std::string& name)
 {

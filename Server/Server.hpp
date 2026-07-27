@@ -5,6 +5,10 @@
 #include "../client/includes.hpp"
 #include "../channel/ChannelRegistry.hpp"
 #include "../Bot/Bot.hpp"
+#include <csignal>
+
+// Signal handling - C++98 compatible
+static volatile bool g_shutdown_requested = false;
 
 // class QuizBot;
 class Server {
@@ -19,7 +23,7 @@ private:
 
     void AcceptNewClient();
     void ReceiveNewData(int fd, ChannelRegistry& channels);
-    void ClearClient(int fd);
+    void ClearClient(int fd, ChannelRegistry& channels);
 
 public:
     Server(int port, std::string password);
@@ -28,6 +32,7 @@ public:
 
     void Init(); // Set up socket, bind, listen
     void Run();  // poll() loop
+    static void signalHandler(int sig);
 };
 
 

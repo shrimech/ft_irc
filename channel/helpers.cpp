@@ -3,12 +3,15 @@
 
 void replyMsg(const std::string& rcode, const std::string& msg, Client& client)
 {
-	// prefix = servername / ( nickname [ [ "!" user ] "@" host ] )
+	// IRC numerics are sent with a server prefix so clients recognize them as
+	// server-generated replies rather than user messages.
 	std::string nickName = client.getNickname();
-	client.sendMessage(":irc.1337.brika" + rcode + nickName + " " + msg  + "\r\n");
+	client.sendMessage(":irc.Brika.net" + rcode + nickName + " " + msg  + "\r\n");
 }
 
 std::string clientPrefix(Client& client) {
+	// The host part is still a local placeholder here. Replace it with the real
+	// peer address if you want fully accurate IRC prefixes.
     return ":" + client.getNickname() + "!" + client.getUsername() + "@localhost";
 }
 

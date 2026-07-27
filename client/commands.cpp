@@ -5,28 +5,27 @@ void authentificate(Client& client,std::map<int, Client>& clientBuffers, const s
     Command command;
     parseCommand(commandLine, command);
 
-    // {DEBUG}: std::cout << "Authenticating client with command: " << command.command << "---------------" << command.params.size() << std::endl;
     if (command.command == "NICK" && command.params.size() == 1) {
-         client.NICK(client.getFd(),clientBuffers, command.params[0]); 
+        client.NICK(client.getFd(),clientBuffers, command.params[0]); 
     } else if ((command.command == "USER") && command.params.size() == 4) {
         client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
     else if ((command.command == "PASS") && client.getPassword() == serv_pass) {
-        std::string reply = "462 ERR_ALREADYREGISTERED.\r\n";
+        std::string reply = ":irc.Brika.net 462 * :You may not reregister\r\n";
         send(client.getFd(), reply.c_str(), reply.length(), 0);
     }
-     else if ((command.command == "PASS") && command.params.size() == 1) {
+    else if ((command.command == "PASS") && command.params.size() == 1) {
         client.PASS(client.getFd(), command.params[0], serv_pass);
     }
-    // if (client.isAuthenticated()) {
-    //     std::string reply = "WELCOME " + client.getUsername() + " :You are now authenticated enjoy!\r\n";
-    //     std::cout << "Client " << client.getFd() << " = "<< client.getUsername() << " authenticated successfully!" << std::endl;
-    //     send(client.getFd(), reply.c_str(), reply.length(), 0);
-    // } 
+    else if (command.command != "NICK" && command.command != "USER" && command.command != "PASS") {
+        std::string reply = ":irc.Brika.net NOTICE AUTH :Please authenticate with PASS, NICK, and USER\r\n";
+        send(client.getFd(), reply.c_str(), reply.length(), 0);
+    }
+    
 	if (client.isAuthenticated()) {
 		std::string nick = client.getNickname();
 		std::string user = client.getUsername();
-		std::string host = "localhost"; // or resolved client IP if you have it
+		std::string host = "localhost";
 
 		std::string reply;
 		reply += ":irc.Brika.net 001 " + nick + " :Welcome to the Internet Relay Network " 

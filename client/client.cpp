@@ -27,18 +27,14 @@ void Client::sendMessage(const std::string& message)
     while (totalSent < message.size())
     {
         ssize_t bytes = send(fd,
-                             message.c_str() + totalSent,
-                             message.size() - totalSent,
-                             MSG_NOSIGNAL);
+            message.c_str() + totalSent,
+            message.size() - totalSent,
+            MSG_NOSIGNAL);
 
         if (bytes > 0)
-        {
             totalSent += bytes;
-        }
         else
-        {
-            std::cerr << "send() failed" << std::endl;
+			std::cerr << "send() failed: " << std::endl;
             break;
-        }
     }
 }
