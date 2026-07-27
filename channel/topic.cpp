@@ -5,7 +5,7 @@ void topicHandler(ChannelRegistry& channels, Client& client, std::vector<std::st
 	if (params.empty())
 		return replyMsg(" 461 ", "TOPIC :Not enough parameters", client);
 	std::string channelName = params[0];
-	if (channelName.size() < 2 || (channelName[0] != '#' && channelName[0] != '&'))
+	if (channelName.size() < 2 || (channelName[0] != '#'))
 		return replyMsg(" 403 ", channelName + " :No such channel", client);
 	Channel* channel = channels.findChannel(channelName);
 	if (!channel)

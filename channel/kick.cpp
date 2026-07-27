@@ -6,7 +6,7 @@ void kickHandler(ChannelRegistry& channels, std::map<int, Client>& clients, Clie
 		return replyMsg(" 461 ", "KICK :Not enough parameters", client);
 	std::string channelName = params[0];
 	std::string targetNick = params[1];
-	if (channelName.size() < 2 || (channelName[0] != '#' && channelName[0] != '&'))
+	if (channelName.size() < 2 || (channelName[0] != '#'))
 		return replyMsg(" 403 ", channelName + " :No such channel", client);
 	Channel* channel = channels.findChannel(channelName);
 	if (!channel)
