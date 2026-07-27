@@ -2,6 +2,7 @@
 #define AUTHENTIFICATION_HPP
 
 #include "includes.hpp"
+
 class Client; // Forward declaration of Client class
 class Authentification
 {

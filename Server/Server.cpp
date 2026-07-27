@@ -18,7 +18,8 @@ Server::~Server() {
 
 void Server::Init() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (_serverSocket < 0) throw std::runtime_error("Failed to create socket");
+    if (_serverSocket < 0) 
+        throw std::runtime_error("Failed to create socket");
 
     int opt = 1;
     setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -33,6 +34,7 @@ void Server::Init() {
     if (bind(_serverSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         throw std::runtime_error("Failed to bind");
 
+    // /proc/sys/net/core/somaxconn
     if (listen(_serverSocket, SOMAXCONN) < 0)
         throw std::runtime_error("Failed to listen");
 
@@ -62,40 +64,66 @@ void Server::Run() {
                     ReceiveNewData(_pollfds[i].fd, channels);
             }
 
-            // disconnections
             if (_pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 ClearClient(_pollfds[i].fd);
-                i--; // cuz ClearClient() modify (pollfd) vect
+                i--;
             }
         }
     }
 }
 
-void Server::AcceptNewClient() {
-    int client_fd = accept(_serverSocket, NULL, NULL);
-    if (client_fd != -1) {
-        fcntl(client_fd, F_SETFL, O_NONBLOCK);
-        
-        struct pollfd cli;
-        cli.fd = client_fd;
-        cli.events = POLLIN;
-        cli.revents = 0;
-        _pollfds.push_back(cli);
-        
-        std::cout << "New client connected: " << client_fd << std::endl;
+// void Server::AcceptNewClient() {
+//     int client_fd = accept(_serverSocket, NULL, NULL);
+//     if (client_fd < 0) {
+//         if (errno == EMFILE || errno == ENFILE)
+//             std::cerr << "[WARNING] Server reached maximum open file descriptors limit!" << std::endl;
+//     }
 
-        // Sending Welcome msg (ghir db smit client guest a si salah)
-        // std::string client_nickname = "Guest"; 
+//     if (client_fd != -1) {
+//         fcntl(client_fd, F_SETFL, O_NONBLOCK);
         
-        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
-// 
-        // send(client_fd, reply.c_str(), reply.length(), 0);
+//         struct pollfd cli;
+//         cli.fd = client_fd;
+//         cli.events = POLLIN;
+//         cli.revents = 0;
+//         _pollfds.push_back(cli);
+        
+//         std::cout << "New client connected: " << client_fd << std::endl;
+
+//         // Sending Welcome msg (ghir db smit client guest a si salah)
+//         // std::string client_nickname = "Guest"; 
+        
+//         // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
+// // 
+//         // send(client_fd, reply.c_str(), reply.length(), 0);
+//     }
+// }
+
+void Server::AcceptNewClient()
+{
+    int client_fd = accept(_serverSocket, NULL, NULL);
+
+    if (client_fd == -1)
+    {
+        std::cerr << "accept() failed" << std::endl;
+        return;
     }
+
+    fcntl(client_fd, F_SETFL, O_NONBLOCK);
+
+    struct pollfd cli;
+    cli.fd = client_fd;
+    cli.events = POLLIN;
+    cli.revents = 0;
+    _pollfds.push_back(cli);
+
+    std::cout << "New client connected: " << client_fd << std::endl;
 }
 
 void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     std::vector<char> buffer(1024, '\0');
     ssize_t bytes = recv(fd, &buffer[0], buffer.size() - 1, 0);
+    // QuizBot bot;
 
     if (bytes > 0) {
         _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes);
@@ -114,7 +142,7 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
             
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
-            HandleCommand(fd, _clientBuffers, _password, command, channels);
+            HandleCommand(fd, _clientBuffers, _password, command, channels, _bot);
         }
     } else if (bytes == 0) {
         std::cout << "Client " << fd << " disconnected." << std::endl;
@@ -138,6 +166,7 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
 void Server::ClearClient(int fd) {
     close(fd);
     _clientBuffers.erase(fd);
+    _bot.removeClient(fd);
 
     std::vector<struct pollfd>::iterator it = _pollfds.begin();
     

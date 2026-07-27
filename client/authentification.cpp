@@ -52,8 +52,13 @@ void Authentification::NICK(int fd,std::map<int, Client>& clientBuffers, const s
         send(fd, reply.c_str(), reply.length(), 0);
         return;
     }
-    setUsername(nickname);
-    std::string reply = "Username set to: " + nickname + "\r\n";
+    setNickname(nickname);
+    if (isAuthenticated()) {
+        std::string reply = "you are now known as: " + nickname + "\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
+    std::string reply = "NickName set to: " + nickname + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
     if(!isAuthenticated()) {
@@ -71,6 +76,11 @@ void Authentification::USER(int fd,std::map<int, Client>& clientBuffers, const s
         return;
     }
     setUsername(username);
+    if (isAuthenticated()) {
+        std::string reply = "you are now known as: " + username + "\r\n";
+        send(fd, reply.c_str(), reply.length(), 0);
+        return;
+    }
     std::string reply = "Username set to: " + username + "\r\n";
     send(fd, reply.c_str(), reply.length(), 0);
     setAuthenticated();
