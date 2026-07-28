@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 
 Channel::Channel(const std::string& name): _name(name), _inviteOnly(false),
-			_topicRestricted(false), _hasKey(false), _hasUserLimit(false) {}
+			_topicRestricted(true), _hasKey(false), _hasUserLimit(false) {}
 Channel::~Channel() {}
 
 std::string Channel::getName() const {

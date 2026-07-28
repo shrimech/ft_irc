@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Register signal handlers for graceful shutdown
     std::signal(SIGINT, Server::signalHandler);
     std::signal(SIGTERM, Server::signalHandler);
 
@@ -45,25 +44,3 @@ int main(int argc, char **argv) {
     std::cout << "Server shutdown gracefully." << std::endl;
     return 0;
 }
-
-// valgrind --track-fds=yes ./irserve 6667 123
-// |===> signal
-
-
-
-
-
-/*
-➜  0irc git:(master) ✗ ./irserve 666799999999999999 123
-Server listening on port 809172991
-^C
-➜  0irc git:(master) ✗ ./irserve 66679999999sdfsdf 123 
-Server listening on port -2039476737
-^C
-➜  0irc git:(master) ✗ ./irserve 66679999999sdfsdf........... 123
-Server listening on port -2039476737
-
-*/
-
-
-// auth replycode

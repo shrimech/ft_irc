@@ -1,64 +1,90 @@
+*This project has been created as part of the 42 curriculum by ahamou-t, shrimech, houardi.*
+
 # ft_irc
 
 > *Internet Relay Chat Server — 42 Curriculum*
 
-**ft_irc** is a custom Internet Relay Chat (IRC) server written in C++98. This project challenges developers to understand network protocols, handle multiple client connections simultaneously using non-blocking I/O, and implement a robust server architecture that complies with IRC standards.
+---
+
+## 📄 Description
+
+**ft_irc** is an Internet Relay Chat (IRC) server written in **C++98**. The main goal of this project is to build a fully functional, non-blocking network server capable of handling multiple client connections concurrently without using multi-threading.
+
+Using non-blocking POSIX sockets and a single event multiplexing loop (`poll()`, `select()`, `kqueue()`, or `epoll()`), the server handles partial message reads, client buffering, and command processing. It complies with the project specification and can be tested with standard IRC clients like **Irssi**, **WeeChat**, or `nc`.
+
+### Core Features
+
+*   **Authentication Flow:** Supports `PASS` (server password validation), `NICK` (nickname assignment and duplicate collision handling), and `USER` (registration completion).
+*   **Channel Operations:**
+    *   `JOIN`: Create or enter channels with topic and member updates.
+    *   `TOPIC`: Display or modify the topic based on permissions.
+    *   `INVITE`: Invite users to invite-only channels.
+    *   `KICK`: Remove target users from channels.
+    *   `MODE`: Manage channel state flags:
+        *   `+i` / `-i`: Toggle invite-only status.
+        *   `+t` / `-t`: Restrict `TOPIC` changes to channel operators.
+        *   `+k` / `-k`: Set or remove channel password key.
+        *   `+o` / `-o`: Grant or revoke channel operator status.
+        *   `+l` / `-l`: Set or remove maximum client limits.
+*   **Messaging & Bot:**
+    *   Direct `PRIVMSG` routing between individual users.
+    *   Channel message broadcasting.
+    *   Built-in bot support for automated/interactive command replies.
 
 ---
 
-## 👥 The Team
-
-This project was developed collaboratively by:
-*   **ahamou-t**
-*   **shrimech**
-*   **houardi**
-
----
-
-## 🚀 Features
-
-The server supports a core set of IRC commands and features, allowing users to connect via standard IRC clients (such as irssi, WeeChat, or netcat) and communicate in real-time.
-
-### Connection & Authentication
-*   Password protection (`PASS`)
-*   Nickname registration and collision handling (`NICK`)
-*   User registration (`USER`)
-
-### Channel Operations
-*   **JOIN / PART:** Enter and leave channels.
-*   **PRIVMSG:** Send private messages to users or broadcast to entire channels.
-*   **TOPIC:** View or change the channel topic.
-
-### Operator Commands
-Channel operators have elevated privileges to manage their channels:
-*   **KICK:** Eject a user from the channel.
-*   **INVITE:** Invite a user to a private channel.
-*   **MODE:** Modify channel settings:
-    *   `+i`: Invite-only channel.
-    *   `+t`: Topic restricted to channel operators.
-    *   `+k`: Set/remove channel key (password).
-    *   `+o`: Give/take channel operator privileges.
-    *   `+l`: Set/remove user limit on the channel.
-
----
-
-## 🛠️ Technical Overview
-
-*   **Language:** Fully compliant with **C++98** standards.
-*   **I/O Multiplexing:** Utilizes a single polling mechanism (`poll()`, `epoll()`, or `kqueue()`) to handle all incoming data from multiple clients without blocking the main execution thread.
-*   **Sockets:** Built on standard POSIX sockets (`sys/socket.h`), using strictly non-blocking file descriptors (`fcntl`).
-*   **Client Management:** Gracefully handles partial data reception, unexpected client disconnections, and buffering to ensure stable packet framing.
-
----
-
-## ⚙️ Installation & Usage
+## 🛠️ Instructions
 
 ### Prerequisites
-*   A C++ compiler (`c++`, `clang++`, or `g++`)
+
+*   A standard Unix-like environment (Linux / macOS)
+*   A C++ compiler supporting C++98 (`c++`, `g++`, or `clang++`)
 *   `make`
 
-### Build
-Compile the project using the provided Makefile:
+### Compilation
+
+Compile the project executable using the provided Makefile:
 
 ```bash
 make
+```
+
+### Execution
+
+Launch the server by passing the target port and network password:
+
+```bash
+./ircserv <port> <password>
+```
+
+*Example:*
+```bash
+./ircserv 6667 my_secret_pass
+```
+
+### Connecting to the Server
+
+Connect using any IRC client or standard TCP network utility:
+
+```bash
+irssi -c localhost -p 6667 -n my_nickname -w my_secret_pass
+```
+
+---
+
+## 📚 Resources
+
+### IRC Specifications & Documentation
+
+*   [RFC 1459 — Internet Relay Chat Protocol](https://datatracker.ietf.org/doc/html/rfc1459)
+*   [RFC 2812 — Internet Relay Chat: Client Protocol](https://datatracker.ietf.org/doc/html/rfc2812)
+*   [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
+*   [Modern IRC Client Protocol Docs](https://modern.ircdocs.horse/)
+
+### AI Assistance Declaration
+
+Artificial Intelligence tools (ChatGPT / Claude / Gemini) were utilized during this project for the following tasks:
+
+*   **Debugging & Edge Cases:** Analyzing network edge-case behavior (e.g., partial read/write socket buffering and socket disconnection edge cases).
+*   **Documentation:** Formatting and structuring project documentation and `README.md` to ensure clarity and standard compliance.
+*   **Testing:** Writing automated scripts and test sequences to verify RFC command syntax and protocol edge cases.
