@@ -4,8 +4,6 @@
 
 #include "../client/includes.hpp"
 
-// class Client;
-
 struct Question {
     std::string text;
     std::string options;
@@ -16,7 +14,7 @@ class QuizBot {
 private:
     std::string _name;
     std::vector<Question> _questions;
-    std::map<int, size_t> _userProgress; // Maps client FD to their question index
+    std::map<int, size_t> _userProgress;
 
 void initQuestions() {
         Question q1 = {
@@ -90,15 +88,6 @@ void initQuestions() {
         _questions.push_back(q10);
     }
 
-    // void initQuestions() {
-    //     Question q1 = {"What is the capital of Morocco?", "1) Casablanca | 2) Rabat | 3) Marrakech", 2};
-    //     Question q2 = {"Which system call watches multiple FDs without blocking?", "1) fork() | 2) poll() | 3) execve()", 2};
-    //     Question q3 = {"What year was C++98 released?", "1) 1998 | 2) 2003 | 3) 1995", 1};
-    //     _questions.push_back(q1);
-    //     _questions.push_back(q2);
-    //     _questions.push_back(q3);
-    // }
-
 public:
     QuizBot() : _name("QuizBot") {
         initQuestions();
@@ -151,7 +140,6 @@ public:
 
 #endif
 
-//PRIVMSG !bot (to enter the bot mode)
 //PRIVMSG !bot :!quiz (next or to bring the quiz(firstly))
 //PRIVMSG !bot :!answer <number>
 //PRIVMSG !bot :!help

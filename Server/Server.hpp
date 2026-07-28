@@ -7,10 +7,8 @@
 #include "../Bot/Bot.hpp"
 #include <csignal>
 
-// Signal handling - C++98 compatible
 static volatile bool g_shutdown_requested = false;
 
-// class QuizBot;
 class Server {
 private:
     int _port;
@@ -30,8 +28,8 @@ public:
     std::string getName() const;
     ~Server();
 
-    void Init(); // Set up socket, bind, listen
-    void Run();  // poll() loop
+    void Init();
+    void Run();
     static void signalHandler(int sig);
 };
 

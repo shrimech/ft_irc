@@ -10,7 +10,7 @@ OBJ = $(SRC:.cpp=.o)
 HDR = $(SERV)Server.hpp $(CLIENT)/authentification.hpp $(CLIENT)/commands.hpp $(CLIENT)/client.hpp $(CHANNEL)/Channel.hpp \
 		$(CHANNEL)/ChannelRegistry.hpp $(BOT)Bot.hpp
 
-Name = irserve
+Name = ircserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 

@@ -2,8 +2,7 @@
 #define CLIENT_HPP
 
 #include "includes.hpp"
-// #include "commands.hpp"
-// class message;
+
 struct Command {
     std::string cmd_line;
     std::string command;

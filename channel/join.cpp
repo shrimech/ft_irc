@@ -28,4 +28,8 @@ void joinHandler(ChannelRegistry& channels, Client& client, std::vector<std::str
 	channel->broadCast(msg);
 	replyMsg(" 353 ", "= " + channelName + " :" + channel->getMembersName(), client);
 	replyMsg(" 366 ", channelName + " :End of /Names list.", client);
+	if (!channel->hasTopic())
+		replyMsg(" 331 ", channelName + " :No topic is set.", client);
+	else
+		replyMsg(" 332 ", channelName + " :" + channel->getTopic(), client);
 }

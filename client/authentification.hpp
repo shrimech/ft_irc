@@ -3,7 +3,7 @@
 
 #include "includes.hpp"
 
-class Client; // Forward declaration of Client class
+class Client;
 class Authentification
 {
 protected:

@@ -1,4 +1,3 @@
-// #include "../client/client.hpp"
 #include "../client/includes.hpp"
 
 void Server::signalHandler(int sig) {
@@ -67,10 +66,9 @@ void Server::Run() {
                     ReceiveNewData(_pollfds[i].fd, channels);
             }
 
-            // disconnections
             if (_pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 ClearClient(_pollfds[i].fd, channels);
-                i--; // cuz ClearClient() modify (pollfd) vect
+                i--;
             }
         }
     }
@@ -88,13 +86,6 @@ void Server::AcceptNewClient() {
         _pollfds.push_back(cli);
         
         std::cout << "New client connected: " << client_fd << std::endl;
-
-        // Sending Welcome msg (ghir db smit client guest a si salah)
-        // std::string client_nickname = "Guest"; 
-        
-        // std::string reply = ":" + this->getName() + " 001 " + client_nickname + " :Welcome to the Internet Relay Network you should authenticate to use our services\r\n";
-// 
-        // send(client_fd, reply.c_str(), reply.length(), 0);
     }
 	else
 		std::cerr << "[SERVER]: fail to accept new client" << std::endl;
@@ -103,24 +94,17 @@ void Server::AcceptNewClient() {
 void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     std::vector<char> buffer(1024, '\0');
     ssize_t bytes = recv(fd, &buffer[0], buffer.size() - 1, 0);
-    // QuizBot bot;
 
     if (bytes > 0) {
 		
-        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes); // 510
-        // // DEBUG: (for data lost)
-        // std::cout << "[DEBUG] Client " << fd << " buffer size now: " 
-        //     << _clientBuffers[fd].size() << std::endl;
+        _clientBuffers[fd].getCmd_line().append(&buffer[0], bytes);
         
         size_t pos;
         while ((pos = _clientBuffers[fd].getCmd_line().find("\n")) != std::string::npos) {
-            // {DEBUG}: std::cout << "Processing command from client " << fd << "   " << _clientBuffers[fd].getCmd_line() << std::endl;
             std::string command = _clientBuffers[fd].getCmd_line().substr(0, pos);
 
             _clientBuffers[fd].getCmd_line().erase(0, pos + 1);
 
-            // {DEBUG}: std::cout << "Command received from client " << fd << ": " << command << std::endl;
-            
             if (!command.empty() && command[command.length() - 1] == '\r')
                 command.erase(command.length() - 1);
 				HandleCommand(fd, _clientBuffers, _password, command, channels, this->_bot);
@@ -131,22 +115,7 @@ void Server::ReceiveNewData(int fd, ChannelRegistry& channels) {
     }
 }
 
-// void Server::ClearClient(int fd) {
-//     close(fd);
-//     _clientBuffers.erase(fd);
-    
-//     // break is important (skip bug or segfault)
-//     for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
-//         if (it->fd == fd) {
-//             _pollfds.erase(it);
-//             break;
-//         }
-//     }
-// }
-
 void Server::ClearClient(int fd, ChannelRegistry& channels) {
-    // Remove the socket from every channel first so channel member lists do not
-    // keep dangling Client* pointers after the map entry is erased.
     channels.removeClientFromAllChannels(fd);
     close(fd);
     _clientBuffers.erase(fd);
@@ -160,36 +129,3 @@ void Server::ClearClient(int fd, ChannelRegistry& channels) {
             ++it;
     }
 }
-
-/*
-Line 01: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-Line 02: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-Line 03: CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-Line 04: DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-Line 05: EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-Line 06: FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-Line 07: GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
-Line 08: HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-Line 09: IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-Line 10: JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
-Line 11: KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
-Line 12: LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-Line 13: MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-Line 14: NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
-Line 15: OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-Line 16: PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-Line 17: QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
-Line 18: RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-Line 19: SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-Line 20: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-Line 21: UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-Line 22: VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-Line 23: WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-Line 24: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-Line 25: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-Line 26: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-Line 27: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-Line 28: 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-Line 29: 222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
-Line 30: 333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
-*/

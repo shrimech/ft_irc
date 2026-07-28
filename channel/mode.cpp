@@ -1,18 +1,22 @@
 #include "ChannelCommands.hpp"
 #include <sstream>
 
-static std::string currentModeString(Channel* channel)
+static std::string currentModeString(Channel* channel, bool isOp)
 {
 	std::string modes = "+";
-	if (channel->isInviteOnly())
-		modes += "i";
-	if (channel->isTopicRestricted())
-		modes += "t";
-	if (channel->hasKey())
+	std::string params;
+	if (channel->isInviteOnly()) modes += "i";
+	if (channel->isTopicRestricted()) modes += "t";
+	if (channel->hasKey()) {
 		modes += "k";
-	if (channel->hasUserLimit())
+		if (isOp) params += " " + channel->getKey();
+	}
+	if (channel->hasUserLimit()) {
+		std::ostringstream oss; oss << channel->getUserLimit();
 		modes += "l";
-	return modes;
+		params += " " + oss.str();
+	}
+	return modes + params;
 }
 
 void modeHandler(ChannelRegistry& channels, std::map<int, Client>& clients, Client& client, std::vector<std::string> params)
@@ -29,9 +33,12 @@ void modeHandler(ChannelRegistry& channels, std::map<int, Client>& clients, Clie
 	if (!channel->isMember(fd))
 		return replyMsg(" 442 ", channelName + " :You're not on that channel", client);
 	if (params.size() < 2)
-		return replyMsg(" 324 ", channelName + " " + currentModeString(channel), client);
+		return replyMsg(" 324 ", channelName + " " + currentModeString(channel, channel->isOperator(fd)), client);
 	if (!channel->isOperator(fd))
 		return replyMsg(" 482 ", channelName + " :You're not a channel operator", client);
+
+
+
 	std::string modeString = params[1];
 	size_t nextArg = 2;
 	bool adding = true;

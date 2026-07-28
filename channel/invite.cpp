@@ -19,7 +19,7 @@ void inviteHandler(ChannelRegistry& channels, Client& client, std::vector<std::s
 			return replyMsg(" 401 ", targetNick + " :No such nick/channel", client);
 		if (channel->isMember(target->getFd()))
 			return replyMsg(" 443 ", targetNick + " " + channelName + " :is already on channel", client);
-		if (channel->isInviteOnly() && !channel->isOperator(fd))
+		if (!channel->isOperator(fd))
 			return replyMsg(" 482 ", channelName + " :You're not a channel operator", client);
 		channel->addInvite(target->getFd());
 		target->sendMessage(clientPrefix(client) + " INVITE " + targetNick + " :" + channelName + "\r\n");

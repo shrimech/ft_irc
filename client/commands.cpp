@@ -55,7 +55,6 @@ void HandleCommand(int fd, std::map<int, Client>& clientBuffers, const std::stri
     else
     {
         parseCommand(commandLine, command);
-        // std::cout << "client +++++++++++++++++++++++++++++++: " << client.getFd() << "  " << client.getNickname() << "  " << client.getUsername() << "  " << client.getPassword() <<std::endl;
         executeCommands(client,clientBuffers, command, channels, bot);
     }
     
@@ -85,13 +84,12 @@ void parseCommand(const std::string& cmd_line, Command& command) {
 
 void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client, const Command& command, ChannelRegistry& channels, QuizBot& bot) {
     
-    // hadchi ana li zedto bash itparsa l Bot
-    if (command.params.size() == 1 || command.params.size() == 2) {
+    // hadchi ana li zedto bash itparse l Bot
+    if (command.params.size() == 2) {
         const std::string& target = command.params[0];
         
         if (target == "QuizBot" || target == "!bot" || target == bot.getName()) {
-            // 1 arg: "!help", 2 args: params[1]
-            std::string botMsg = (command.params.size() == 1) ? "!help" : command.params[1];
+            std::string botMsg = command.params[1];
             std::string botReply = bot.handleCommand(fd, client.getNickname(), botMsg);
             send(fd, botReply.c_str(), botReply.length(), 0);
             std::cout << "[BOT] Replied to " << client.getNickname() << ": " << botMsg << std::endl;
@@ -99,14 +97,6 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
         }
     }
 
-    // if (command.params.size() != 2) {
-    //     std::string reply = "PRIVMSG <recipient> <message> . \r\n";
-    //     send(fd,reply.c_str(),reply.length(),0);
-    //     std::cerr << "PRIVMSG <recipient> <message>." << std::endl;
-    //     return;
-    // }
-
-        // o hadi li foq khas tkon haka
     if (command.params.empty()) {
         std::string reply = "411 " + client.getNickname() + " :No recipient given (PRIVMSG)\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
@@ -130,7 +120,6 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
 
     if (recipient[0] == '#') {
         if (!channels.channelExists(recipient)) {
-            // 403 ERR_NOSUCHCHANNEL
             std::string reply = "403 " + client.getNickname() + " " + recipient + " :No such channel\r\n";
             send(fd, reply.c_str(), reply.length(), 0);
             std::cerr << "Channel " << recipient << " does not exist." << std::endl;
@@ -139,28 +128,25 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
         else {
             Channel* channel = channels.findChannel(recipient);
             if (channel) {
-                // Check if the client is part of the channel
-                // Assuming Channel class has a method to check membership
                 if (!channel->isMember(client.getFd())) {
-                    // FIXED: Changed to RFC 404 ERR_CANNOTSENDTOCHAN
                     std::string reply = "404 " + client.getNickname() + " " + recipient + " :Cannot send to channel\r\n";
                     send(fd, reply.c_str(), reply.length(), 0);
                     std::cerr << "Client " << client.getFd() << " is not a member of channel " << recipient << "." << std::endl;
                     return;
                 }
-                // :salah!salah@localhost PRIVMSG #general :Hello
                 std::string fullMessage = ":" + client.getNickname() + "!" + client.getUsername() + "@localhost PRIVMSG " + recipient + " :" + message + "\r\n";
                 channel->broadCast(fullMessage, client.getFd());
                 std::cout << "Message sent to channel " << recipient << ": " << message << std::endl;
                 return;
             }
         }
-        // FIXED: Changed to RFC 404 if channel exists but sending fails
         std::string reply = "404 " + client.getNickname() + " " + recipient + " :Cannot send to channel\r\n";
         send(fd, reply.c_str(), reply.length(), 0);
         std::cerr << "PRIVMSG to channels is not implemented yet." << std::endl;
         return;
     }
+
+
     // Find the recipient in the clientBuffers
     for (std::map<int, Client>::const_iterator pair = clientBuffers.begin(); pair != clientBuffers.end(); ++pair) {
         if(pair->second.getNickname() == recipient) {
@@ -173,33 +159,20 @@ void PRIVMSG(int fd, const std::map<int, Client>& clientBuffers, Client& client,
     }
 
     // If recipient not found
-        // qadit right format dial hadi 
     std::string errorReply = "401 " + client.getNickname() + " " + recipient + " :No such nick/channel\r\n";
     send(fd, errorReply.c_str(), errorReply.length(), 0);
-    // std::string reply = "Recipient " + recipient + " not found.\r\n";
-    // send(fd, reply.c_str(), reply.length(), 0);
     std::cerr << "Recipient " << recipient << " not found." << std::endl;
 }
 
 
 void executeCommands(Client& client, std::map<int, Client>& clientBuffers, const Command& command, ChannelRegistry& channels, QuizBot& bot) {
 	std::vector<std::string> params = command.params;
-    if(command.command == "PASS")
+    if(command.command == "PASS"|| command.command == "USER")
     {
         std::string reply =  "U're already authentified ! \r\n";
         send(client.getFd(),reply.c_str(),reply.length(),0);
         std::cerr << "client "<< client.getUsername() << "! already authentified !" << std::endl;
         return;
-    }
-	if (command.command == "PING") {
-        std::string reply = "PONG :server\r\n";
-        send(client.getFd(), reply.c_str(), reply.length(), 0);
-        // PRIVMSG(client, command);
-		// joinHandler(channels, client, params);
-		params.clear();
-    }
-    else if (command.command == "USER" && command.params.size() == 4) {
-        client.USER(client.getFd(),clientBuffers, command.params[0]);
     }
     else if (command.command == "NICK" && command.params.size() == 1) {
         client.NICK(client.getFd(),clientBuffers, command.params[0]);
@@ -238,25 +211,3 @@ void checkUniqueNickname(const std::string& nickname, const std::map<int, Client
         }
     }
 }
-
-// int main() {
-//     Client client;
-//     Command command;
-//     client.setFd(3); // Set the file descriptor to stdout for demonstration
-//     std::string input;
-//     while (true) {
-//         std::cout << "> ";
-//         std::getline(std::cin, input);
-
-//         if (input == "exit") {
-//             break;
-//         }
-
-//         parseCommand(input, command);
-//         executeCommands(client, command);
-//         command.params.clear(); // Clear parameters for the next command
-        
-//     }
-
-//     return 0;
-// }
